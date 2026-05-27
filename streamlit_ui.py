@@ -1,199 +1,305 @@
 import streamlit as st
-
-# ---------------- HOSPITAL INFO ----------------
-HOSPITAL_NAME = "JAN KALYAN HOSPITAL"
-LOCATION = "Bhopal"
-
-# ---------------- DATA STORAGE ----------------
-doctor_list = []
-patient_list = []
-appointment_list = []
-bill_list = []
+import pandas as pd
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
-    page_title=HOSPITAL_NAME,
+    page_title="JAN KALYAN HOSPITAL",
     page_icon="🏥",
     layout="wide"
 )
 
-# ---------------- HEADER ----------------
-st.markdown(
-    f"""
-    <h1 style='text-align:center; color:#0E76A8;'>
-        🏥 {HOSPITAL_NAME}
-    </h1>
-    <h4 style='text-align:center; color:gray;'>
-        Hospital Management System
-    </h4>
-    """,
-    unsafe_allow_html=True
-)
+# ---------------- CUSTOM CSS ----------------
+st.markdown("""
+<style>
+.main {
+    background-color: #f5f7fa;
+}
+
+.title {
+    text-align: center;
+    font-size: 45px;
+    color: white;
+    font-weight: bold;
+}
+
+.subtitle {
+    text-align: center;
+    color: white;
+    font-size: 20px;
+}
+
+.banner {
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+}
+
+.card {
+    background-color: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ---------------- BANNER ----------------
+st.markdown(f"""
+<div class="banner">
+    <div class="title">🏥 JAN KALYAN HOSPITAL</div>
+    <div class="subtitle">Advanced Hospital Management System</div>
+</div>
+""", unsafe_allow_html=True)
+
+# ---------------- SESSION STATE ----------------
+if "doctors" not in st.session_state:
+    st.session_state.doctors = []
+
+if "patients" not in st.session_state:
+    st.session_state.patients = []
+
+if "appointments" not in st.session_state:
+    st.session_state.appointments = []
+
+if "bills" not in st.session_state:
+    st.session_state.bills = []
 
 # ---------------- SIDEBAR ----------------
-menu = st.sidebar.selectbox(
-    "Select Option",
+menu = st.sidebar.radio(
+    "📌 Navigation",
     [
-        "Add Doctor",
-        "View Doctors",
-        "Add Patient",
-        "View Patients",
-        "Book Appointment",
-        "View Appointments",
-        "Generate Bill",
-        "View Bills"
+        "🏠 Dashboard",
+        "👨‍⚕️ Doctor Management",
+        "🧑 Patient Management",
+        "📅 Appointment System",
+        "💰 Billing System"
     ]
 )
 
-# =========================================================
-# ADD DOCTOR
-# =========================================================
-if menu == "Add Doctor":
+# =====================================================
+# DASHBOARD
+# =====================================================
+if menu == "🏠 Dashboard":
 
-    st.subheader("➕ Add Doctor")
+    col1, col2, col3, col4 = st.columns(4)
 
-    name = st.text_input("Doctor Name")
-    specialization = st.text_input("Specialization")
-    experience = st.number_input("Experience (Years)", 0, 50)
-    fee = st.number_input("Consultation Fee", 0)
+    col1.metric("Doctors", len(st.session_state.doctors))
+    col2.metric("Patients", len(st.session_state.patients))
+    col3.metric("Appointments", len(st.session_state.appointments))
+    col4.metric("Bills", len(st.session_state.bills))
 
-    if st.button("Add Doctor"):
-        doctor = {
-            "ID": len(doctor_list) + 1,
-            "Name": name,
-            "Specialization": specialization,
-            "Experience": experience,
-            "Fee": fee
-        }
+    st.image(
+        "https://images.unsplash.com/photo-1586773860418-d37222d8fce3",
+        use_container_width=True
+    )
 
-        doctor_list.append(doctor)
-        st.success("Doctor Added Successfully!")
+# =====================================================
+# DOCTOR MANAGEMENT
+# =====================================================
+elif menu == "👨‍⚕️ Doctor Management":
 
-# =========================================================
-# VIEW DOCTORS
-# =========================================================
-elif menu == "View Doctors":
+    st.subheader("👨‍⚕️ Doctor Management System")
 
-    st.subheader("👨‍⚕️ Doctor List")
+    tab1, tab2 = st.tabs(["➕ Add Doctor", "📋 View Doctors"])
 
-    if doctor_list:
-        st.table(doctor_list)
-    else:
-        st.warning("No doctors available.")
+    # ---------- ADD DOCTOR ----------
+    with tab1:
 
-# =========================================================
-# ADD PATIENT
-# =========================================================
-elif menu == "Add Patient":
+        with st.form("doctor_form"):
 
-    st.subheader("➕ Add Patient")
+            col1, col2 = st.columns(2)
 
-    name = st.text_input("Patient Name")
-    age = st.number_input("Age", 0, 120)
-    disease = st.text_input("Disease")
-    room = st.text_input("Room Number")
+            with col1:
+                doctor_name = st.text_input("Doctor Name")
+                specialization = st.text_input("Specialization")
 
-    if st.button("Add Patient"):
+            with col2:
+                experience = st.number_input("Experience", 0, 50)
+                fee = st.number_input("Consultation Fee", 0)
 
-        patient = {
-            "ID": len(patient_list) + 1,
-            "Name": name,
-            "Age": age,
-            "Disease": disease,
-            "Room": room
-        }
+            submit = st.form_submit_button("Add Doctor")
 
-        patient_list.append(patient)
-        st.success("Patient Added Successfully!")
+            if submit:
 
-# =========================================================
-# VIEW PATIENTS
-# =========================================================
-elif menu == "View Patients":
+                doctor = {
+                    "Doctor ID": len(st.session_state.doctors) + 1,
+                    "Name": doctor_name,
+                    "Specialization": specialization,
+                    "Experience": experience,
+                    "Fee": fee
+                }
 
-    st.subheader("🧑‍🤝‍🧑 Patient List")
+                st.session_state.doctors.append(doctor)
 
-    if patient_list:
-        st.table(patient_list)
-    else:
-        st.warning("No patients available.")
+                st.success("✅ Doctor Added Successfully")
 
-# =========================================================
-# BOOK APPOINTMENT
-# =========================================================
-elif menu == "Book Appointment":
+    # ---------- VIEW DOCTOR ----------
+    with tab2:
 
-    st.subheader("📅 Book Appointment")
+        if st.session_state.doctors:
 
-    doctor_name = st.text_input("Doctor Name")
-    patient_name = st.text_input("Patient Name")
-    date = st.date_input("Appointment Date")
-    time = st.time_input("Appointment Time")
+            df = pd.DataFrame(st.session_state.doctors)
+            st.dataframe(df, use_container_width=True)
 
-    if st.button("Book Appointment"):
+        else:
+            st.warning("No Doctors Available")
 
-        appointment = {
-            "ID": len(appointment_list) + 1,
-            "Doctor": doctor_name,
-            "Patient": patient_name,
-            "Date": str(date),
-            "Time": str(time)
-        }
+# =====================================================
+# PATIENT MANAGEMENT
+# =====================================================
+elif menu == "🧑 Patient Management":
 
-        appointment_list.append(appointment)
-        st.success("Appointment Booked Successfully!")
+    st.subheader("🧑 Patient Management System")
 
-# =========================================================
-# VIEW APPOINTMENTS
-# =========================================================
-elif menu == "View Appointments":
+    tab1, tab2 = st.tabs(["➕ Add Patient", "📋 View Patients"])
 
-    st.subheader("📋 Appointment List")
+    # ---------- ADD PATIENT ----------
+    with tab1:
 
-    if appointment_list:
-        st.table(appointment_list)
-    else:
-        st.warning("No appointments available.")
+        with st.form("patient_form"):
 
-# =========================================================
-# GENERATE BILL
-# =========================================================
-elif menu == "Generate Bill":
+            col1, col2 = st.columns(2)
 
-    st.subheader("💰 Generate Bill")
+            with col1:
+                patient_name = st.text_input("Patient Name")
+                age = st.number_input("Age", 0, 120)
 
-    patient_name = st.text_input("Patient Name")
-    doctor_fee = st.number_input("Doctor Fee", 0)
-    room_charges = st.number_input("Room Charges", 0)
-    medicine_charges = st.number_input("Medicine Charges", 0)
+            with col2:
+                disease = st.text_input("Disease")
+                room = st.text_input("Room Number")
 
-    total = doctor_fee + room_charges + medicine_charges
+            submit = st.form_submit_button("Add Patient")
 
-    if st.button("Generate Bill"):
+            if submit:
 
-        bill = {
-            "Bill ID": len(bill_list) + 1,
-            "Patient": patient_name,
-            "Doctor Fee": doctor_fee,
-            "Room Charges": room_charges,
-            "Medicine Charges": medicine_charges,
-            "Total": total
-        }
+                patient = {
+                    "Patient ID": len(st.session_state.patients) + 1,
+                    "Name": patient_name,
+                    "Age": age,
+                    "Disease": disease,
+                    "Room": room
+                }
 
-        bill_list.append(bill)
+                st.session_state.patients.append(patient)
 
-        st.success("Bill Generated Successfully!")
+                st.success("✅ Patient Added Successfully")
 
-        st.info(f"Total Amount = ₹{total}")
+    # ---------- VIEW PATIENT ----------
+    with tab2:
 
-# =========================================================
-# VIEW BILLS
-# =========================================================
-elif menu == "View Bills":
+        if st.session_state.patients:
 
-    st.subheader("🧾 All Bills")
+            df = pd.DataFrame(st.session_state.patients)
+            st.dataframe(df, use_container_width=True)
 
-    if bill_list:
-        st.table(bill_list)
-    else:
-        st.warning("No bills available.")
+        else:
+            st.warning("No Patients Available")
+
+# =====================================================
+# APPOINTMENT SYSTEM
+# =====================================================
+elif menu == "📅 Appointment System":
+
+    st.subheader("📅 Appointment Booking System")
+
+    tab1, tab2 = st.tabs(["➕ Book Appointment", "📋 View Appointments"])
+
+    # ---------- BOOK ----------
+    with tab1:
+
+        with st.form("appointment_form"):
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                doctor = st.text_input("Doctor Name")
+                patient = st.text_input("Patient Name")
+
+            with col2:
+                date = st.date_input("Appointment Date")
+                time = st.time_input("Appointment Time")
+
+            submit = st.form_submit_button("Book Appointment")
+
+            if submit:
+
+                appointment = {
+                    "Appointment ID": len(st.session_state.appointments) + 1,
+                    "Doctor": doctor,
+                    "Patient": patient,
+                    "Date": str(date),
+                    "Time": str(time)
+                }
+
+                st.session_state.appointments.append(appointment)
+
+                st.success("✅ Appointment Booked Successfully")
+
+    # ---------- VIEW ----------
+    with tab2:
+
+        if st.session_state.appointments:
+
+            df = pd.DataFrame(st.session_state.appointments)
+            st.dataframe(df, use_container_width=True)
+
+        else:
+            st.warning("No Appointments Available")
+
+# =====================================================
+# BILLING SYSTEM
+# =====================================================
+elif menu == "💰 Billing System":
+
+    st.subheader("💰 Hospital Billing System")
+
+    tab1, tab2 = st.tabs(["➕ Generate Bill", "📋 View Bills"])
+
+    # ---------- GENERATE ----------
+    with tab1:
+
+        with st.form("bill_form"):
+
+            patient_name = st.text_input("Patient Name")
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                doctor_fee = st.number_input("Doctor Fee", 0)
+
+            with col2:
+                room_charge = st.number_input("Room Charges", 0)
+
+            with col3:
+                medicine_charge = st.number_input("Medicine Charges", 0)
+
+            total = doctor_fee + room_charge + medicine_charge
+
+            submit = st.form_submit_button("Generate Bill")
+
+            if submit:
+
+                bill = {
+                    "Bill ID": len(st.session_state.bills) + 1,
+                    "Patient": patient_name,
+                    "Doctor Fee": doctor_fee,
+                    "Room Charges": room_charge,
+                    "Medicine Charges": medicine_charge,
+                    "Total Amount": total
+                }
+
+                st.session_state.bills.append(bill)
+
+                st.success(f"✅ Bill Generated | Total = ₹{total}")
+
+    # ---------- VIEW ----------
+    with tab2:
+
+        if st.session_state.bills:
+
+            df = pd.DataFrame(st.session_state.bills)
+            st.dataframe(df, use_container_width=True)
+
+        else:
+            st.warning("No Bills Available")
