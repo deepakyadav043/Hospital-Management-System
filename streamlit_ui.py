@@ -1,932 +1,1058 @@
 import streamlit as st
+import pandas as pd
 import csv
 import os
+import datetime
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
-# ─────────────────────────────────────────────
-# Page Config
-# ─────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────
+#  PAGE CONFIG
+# ──────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Jan Kalyan Hospital",
     page_icon="🏥",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
-# ─────────────────────────────────────────────
-# Custom CSS
-# ─────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────
+#  GLOBAL STYLES
+# ──────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
 
+/* ── Root Variables ── */
+:root {
+    --teal:      #0f8b8d;
+    --teal-lt:   #1ab5b8;
+    --teal-dk:   #096466;
+    --gold:      #e6a817;
+    --gold-lt:   #f5c842;
+    --dark:      #0d1b2a;
+    --mid:       #1a2e40;
+    --card:      #162232;
+    --border:    rgba(15,139,141,0.25);
+    --text:      #e8f4f8;
+    --muted:     #8aaec0;
+    --danger:    #e05c5c;
+    --success:   #3dba7e;
+}
+
+/* ── Base ── */
 html, body, [class*="css"] {
-    font-family: 'Source Sans 3', sans-serif;
+    font-family: 'DM Sans', sans-serif;
+    background-color: var(--dark);
+    color: var(--text);
 }
+.stApp { background: var(--dark); }
 
-/* Background */
-.stApp {
-    background: linear-gradient(160deg, #f0f4f8 0%, #dce8f5 50%, #e8f0fb 100%);
-}
-
-/* Hero Banner */
-.hero-banner {
-    background: linear-gradient(135deg, #0a2342 0%, #1a4480 40%, #1565c0 70%, #0d47a1 100%);
-    border-radius: 20px;
-    padding: 0;
-    margin-bottom: 2rem;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(10,35,66,0.4);
-    position: relative;
-}
-
-.hero-content {
-    padding: 2.5rem 3rem;
-    position: relative;
-    z-index: 2;
-}
-
-.hero-banner::before {
-    content: '';
-    position: absolute;
-    top: -60px; right: -60px;
-    width: 300px; height: 300px;
-    background: rgba(255,255,255,0.04);
-    border-radius: 50%;
-    z-index: 1;
-}
-.hero-banner::after {
-    content: '';
-    position: absolute;
-    bottom: -80px; left: -40px;
-    width: 250px; height: 250px;
-    background: rgba(255,255,255,0.03);
-    border-radius: 50%;
-    z-index: 1;
-}
-
-.building-svg {
-    position: absolute;
-    right: 3rem;
-    bottom: 0;
-    z-index: 2;
-    opacity: 0.92;
-}
-
-.hospital-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 3rem;
-    font-weight: 900;
-    color: #ffffff;
-    margin: 0;
-    line-height: 1.1;
-    letter-spacing: -0.5px;
-    text-shadow: 0 2px 20px rgba(0,0,0,0.3);
-}
-
-.hospital-subtitle {
-    font-size: 1rem;
-    color: #90caf9;
-    margin-top: 0.5rem;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    font-weight: 300;
-}
-
-.hospital-tagline {
-    font-size: 1.1rem;
-    color: #bbdefb;
-    margin-top: 1rem;
-    font-style: italic;
-    font-weight: 300;
-}
-
-.stat-pill {
-    display: inline-block;
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.2);
-    backdrop-filter: blur(4px);
-    color: white;
-    padding: 0.4rem 1rem;
-    border-radius: 50px;
-    font-size: 0.85rem;
-    margin-top: 1.5rem;
-    margin-right: 0.5rem;
-}
-
-/* Sidebar */
+/* ── Sidebar ── */
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0a2342 0%, #1a4480 100%) !important;
-    border-right: none;
+    background: linear-gradient(180deg, #0a141f 0%, var(--mid) 100%);
+    border-right: 1px solid var(--border);
 }
-[data-testid="stSidebar"] * {
-    color: #e3f2fd !important;
-}
-[data-testid="stSidebar"] .stRadio label {
-    font-size: 0.95rem !important;
-    padding: 0.3rem 0;
-}
-[data-testid="stSidebar"] hr {
-    border-color: rgba(255,255,255,0.15) !important;
-}
-
-/* Section Headers */
-.section-header {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.8rem;
-    color: #0a2342;
-    border-bottom: 3px solid #1565c0;
-    padding-bottom: 0.5rem;
-    margin-bottom: 1.5rem;
-}
-
-/* Cards */
-.info-card {
-    background: white;
-    border-radius: 14px;
-    padding: 1.4rem 1.6rem;
-    box-shadow: 0 4px 20px rgba(10,35,66,0.08);
-    border-left: 5px solid #1565c0;
-    margin-bottom: 1rem;
-    transition: transform 0.2s;
-}
-.info-card:hover { transform: translateY(-2px); }
-
-.info-card h4 {
-    font-family: 'Playfair Display', serif;
-    color: #0a2342;
-    margin: 0 0 0.5rem 0;
-    font-size: 1.1rem;
-}
-.info-card p {
-    margin: 0.15rem 0;
-    color: #444;
-    font-size: 0.9rem;
-}
-.info-card .badge {
-    display: inline-block;
-    background: #e3f2fd;
-    color: #1565c0;
-    padding: 0.2rem 0.6rem;
-    border-radius: 20px;
+[data-testid="stSidebar"] .stRadio > label {
+    color: var(--muted) !important;
     font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 0.2rem 0;
+}
+[data-testid="stSidebar"] .stRadio div[role="radio"] label {
+    color: var(--text) !important;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    transition: background 0.2s;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+[data-testid="stSidebar"] .stRadio div[role="radio"] label:hover {
+    background: rgba(15,139,141,0.15);
+}
+
+/* ── Header banner ── */
+.hosp-header {
+    background: linear-gradient(135deg, var(--teal-dk) 0%, var(--teal) 50%, var(--teal-lt) 100%);
+    border-radius: 16px;
+    padding: 1.8rem 2.2rem;
+    margin-bottom: 1.6rem;
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
+    box-shadow: 0 8px 32px rgba(15,139,141,0.3);
+    position: relative;
+    overflow: hidden;
+}
+.hosp-header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+}
+.hosp-header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; right: 60px;
+    width: 250px; height: 250px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+}
+.hosp-logo { font-size: 3.2rem; line-height: 1; }
+.hosp-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+}
+.hosp-tagline {
+    font-size: 0.88rem;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.06em;
+    margin-top: 0.2rem;
+}
+.hosp-badge {
+    margin-left: auto;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 50px;
+    padding: 0.35rem 1rem;
+    font-size: 0.78rem;
+    color: #fff;
+    letter-spacing: 0.08em;
     font-weight: 600;
 }
 
-/* Report Cards */
-.report-card {
-    background: linear-gradient(135deg, #0a2342 0%, #1565c0 100%);
-    color: white;
-    border-radius: 16px;
-    padding: 1.5rem;
-    text-align: center;
-    box-shadow: 0 8px 25px rgba(10,35,66,0.25);
-}
-.report-card .number {
+/* ── Section title ── */
+.section-title {
     font-family: 'Playfair Display', serif;
-    font-size: 2.8rem;
-    font-weight: 900;
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: var(--text);
+    border-left: 4px solid var(--teal);
+    padding-left: 0.8rem;
+    margin-bottom: 1.2rem;
+}
+
+/* ── Metric cards ── */
+.metrics-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.metric-card {
+    flex: 1;
+    min-width: 140px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.2rem 1.4rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.metric-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(15,139,141,0.2); }
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    border-radius: 14px 14px 0 0;
+}
+.metric-card.teal::before   { background: linear-gradient(90deg, var(--teal), var(--teal-lt)); }
+.metric-card.gold::before   { background: linear-gradient(90deg, var(--gold), var(--gold-lt)); }
+.metric-card.green::before  { background: linear-gradient(90deg, #3dba7e, #5dd4a0); }
+.metric-card.purple::before { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+.metric-icon { font-size: 1.8rem; margin-bottom: 0.5rem; }
+.metric-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.1rem;
+    font-weight: 700;
+    color: var(--text);
     line-height: 1;
 }
-.report-card .label {
-    font-size: 0.85rem;
-    opacity: 0.8;
-    margin-top: 0.3rem;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-}
+.metric-label { font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem; font-weight: 500; letter-spacing: 0.04em; }
 
-/* Form styling */
-[data-testid="stForm"] {
-    background: white;
-    border-radius: 16px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 20px rgba(10,35,66,0.08);
-}
-
-/* Buttons */
-.stButton > button {
-    background: linear-gradient(135deg, #0a2342, #1565c0) !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.5px !important;
-    padding: 0.5rem 1.5rem !important;
-    transition: opacity 0.2s !important;
-}
-.stButton > button:hover { opacity: 0.88 !important; }
-
-.stSelectbox label, .stTextInput label, .stNumberInput label {
-    font-weight: 600;
-    color: #0a2342;
-}
-
-/* Alerts */
-.success-msg {
-    background: #e8f5e9; border-left: 4px solid #43a047;
-    padding: 0.8rem 1rem; border-radius: 8px; color: #1b5e20;
-    margin: 0.5rem 0;
-}
-.error-msg {
-    background: #ffebee; border-left: 4px solid #e53935;
-    padding: 0.8rem 1rem; border-radius: 8px; color: #b71c1c;
-    margin: 0.5rem 0;
-}
-
-/* Bill */
-.bill-box {
-    background: white;
-    border-radius: 16px;
-    padding: 2rem;
-    box-shadow: 0 8px 30px rgba(10,35,66,0.12);
-    border: 2px dashed #90caf9;
-    max-width: 500px;
-    margin: 0 auto;
-}
-.bill-box h3 {
-    font-family: 'Playfair Display', serif;
-    color: #0a2342;
-    text-align: center;
+/* ── Card / Panel ── */
+.panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.4rem 1.6rem;
     margin-bottom: 1rem;
 }
-.bill-row {
-    display: flex; justify-content: space-between;
-    padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;
-    font-size: 0.95rem; color: #333;
+.panel h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--teal-lt);
+    margin-bottom: 0.8rem;
 }
-.bill-total {
-    display: flex; justify-content: space-between;
-    padding: 0.8rem 0; margin-top: 0.5rem;
-    font-weight: 700; font-size: 1.1rem;
-    color: #0a2342;
-    border-top: 2px solid #1565c0;
+
+/* ── Buttons ── */
+.stButton > button {
+    background: linear-gradient(135deg, var(--teal), var(--teal-lt)) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 9px !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    padding: 0.55rem 1.4rem !important;
+    box-shadow: 0 4px 14px rgba(15,139,141,0.35) !important;
+    transition: all 0.2s !important;
 }
+.stButton > button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(15,139,141,0.5) !important;
+}
+.del-btn > button {
+    background: linear-gradient(135deg, #c0392b, var(--danger)) !important;
+    box-shadow: 0 4px 14px rgba(224,92,92,0.3) !important;
+}
+
+/* ── Form inputs ── */
+.stTextInput input, .stNumberInput input, .stSelectbox div[data-baseweb],
+.stDateInput input, .stTimeInput input {
+    background: var(--mid) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    color: var(--text) !important;
+    font-family: 'DM Sans', sans-serif !important;
+}
+.stTextInput input:focus, .stNumberInput input:focus {
+    border-color: var(--teal) !important;
+    box-shadow: 0 0 0 2px rgba(15,139,141,0.2) !important;
+}
+label { color: var(--muted) !important; font-size: 0.85rem !important; font-weight: 500 !important; }
+
+/* ── Dataframe ── */
+.stDataFrame { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+.stDataFrame thead th {
+    background: var(--teal-dk) !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+}
+.stDataFrame tbody tr:nth-child(even) { background: rgba(15,139,141,0.05) !important; }
+.stDataFrame tbody tr:hover { background: rgba(15,139,141,0.12) !important; }
+
+/* ── Alerts ── */
+.stSuccess { background: rgba(61,186,126,0.15) !important; border-left: 4px solid var(--success) !important; border-radius: 8px !important; }
+.stError   { background: rgba(224,92,92,0.15)  !important; border-left: 4px solid var(--danger)  !important; border-radius: 8px !important; }
+.stWarning { background: rgba(230,168,23,0.15) !important; border-left: 4px solid var(--gold)    !important; border-radius: 8px !important; }
+
+/* ── Tabs ── */
+.stTabs [data-baseweb="tab-list"] {
+    background: transparent;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+}
+.stTabs [data-baseweb="tab"] {
+    color: var(--muted) !important;
+    background: transparent !important;
+    border-radius: 8px 8px 0 0 !important;
+    font-weight: 500 !important;
+    padding: 0.5rem 1.2rem !important;
+}
+.stTabs [aria-selected="true"] {
+    color: var(--teal-lt) !important;
+    border-bottom: 2px solid var(--teal-lt) !important;
+}
+
+/* ── Expander ── */
+.streamlit-expanderHeader {
+    background: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    color: var(--text) !important;
+    font-weight: 600 !important;
+}
+.streamlit-expanderContent { background: var(--card) !important; border: 1px solid var(--border) !important; border-top: none !important; }
+
+/* ── Divider ── */
+hr { border-color: var(--border) !important; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--dark); }
+::-webkit-scrollbar-thumb { background: var(--teal-dk); border-radius: 3px; }
 </style>
 """, unsafe_allow_html=True)
 
 
-# ─────────────────────────────────────────────
-# Data Classes
-# ─────────────────────────────────────────────
-class Hospital:
-    def __init__(self, hospital_name, location):
-        self.hospital_name = hospital_name
-        self.location = location
+# ──────────────────────────────────────────────────────────────────
+#  CONSTANTS
+# ──────────────────────────────────────────────────────────────────
+HOSPITAL   = "Jan Kalyan Hospital"
+LOCATION   = "Bhopal, Madhya Pradesh"
+FILES      = {
+    "doctors":      "jkh_doctors.csv",
+    "patients":     "jkh_patients.csv",
+    "appointments": "jkh_appointments.csv",
+    "bills":        "jkh_bills.csv",
+}
 
-class Doctor(Hospital):
-    def __init__(self, hospital_name, location, doctor_id, doctor_name, specialization, experience, fee):
-        super().__init__(hospital_name, location)
-        self.doctor_id = doctor_id
-        self.doctor_name = doctor_name
-        self.specialization = specialization
-        self.experience = experience
-        self.fee = fee
-
-class Patient(Hospital):
-    def __init__(self, hospital_name, location, patient_id, patient_name, age, disease, room_number):
-        super().__init__(hospital_name, location)
-        self.patient_id = patient_id
-        self.patient_name = patient_name
-        self.age = age
-        self.disease = disease
-        self.room_number = room_number
-
-class Appointment:
-    def __init__(self, appointment_id, doctor_name, patient_name, date, time):
-        self.appointment_id = appointment_id
-        self.doctor_name = doctor_name
-        self.patient_name = patient_name
-        self.date = date
-        self.time = time
-
-class Bill(Hospital):
-    def __init__(self, hospital_name, location, bill_id, patient_name, doctor_fee, room_charges, medicine_charges):
-        super().__init__(hospital_name, location)
-        self.bill_id = bill_id
-        self.patient_name = patient_name
-        self.doctor_fee = doctor_fee
-        self.room_charges = room_charges
-        self.medicine_charges = medicine_charges
-        self.total = doctor_fee + room_charges + medicine_charges
+SPECIALIZATIONS = [
+    "Cardiologist", "Neurologist", "Orthopedic Surgeon", "Pediatrician",
+    "Gynecologist", "Dermatologist", "General Physician", "ENT Specialist",
+    "Ophthalmologist", "Oncologist", "Radiologist", "Anesthesiologist",
+    "Gastroenterologist", "Pulmonologist", "Endocrinologist", "Urologist",
+    "Psychiatrist", "Nephrologist", "Rheumatologist", "Diabetologist",
+]
+DISEASES = [
+    "Hypertension", "Diabetes Mellitus", "Malaria", "Typhoid",
+    "Dengue Fever", "COVID-19", "Pneumonia", "Tuberculosis",
+    "Asthma", "Arthritis", "Appendicitis", "Kidney Stone",
+    "Heart Disease", "Liver Disease", "Fracture", "Migraine",
+    "Anemia", "Thyroid Disorder", "Cancer (Stage I)", "Jaundice",
+]
 
 
-# ─────────────────────────────────────────────
-# Session State Init
-# ─────────────────────────────────────────────
-if "doctor_list" not in st.session_state:
-    st.session_state.doctor_list = []
-if "patient_list" not in st.session_state:
-    st.session_state.patient_list = []
-if "appointment_list" not in st.session_state:
-    st.session_state.appointment_list = []
-if "bill_list" not in st.session_state:
-    st.session_state.bill_list = []
-if "data_loaded" not in st.session_state:
-    st.session_state.data_loaded = False
+# ──────────────────────────────────────────────────────────────────
+#  CSV HELPERS
+# ──────────────────────────────────────────────────────────────────
+def load_csv(key: str, columns: list) -> pd.DataFrame:
+    path = FILES[key]
+    if os.path.exists(path):
+        try:
+            df = pd.read_csv(path)
+            for c in columns:
+                if c not in df.columns:
+                    df[c] = ""
+            return df
+        except Exception:
+            pass
+    return pd.DataFrame(columns=columns)
 
 
-# ─────────────────────────────────────────────
-# CSV Save & Load
-# ─────────────────────────────────────────────
-def save_doctors():
-    with open("doctors.csv", "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(["doctor_id", "doctor_name", "specialization", "experience", "fee"])
-        for d in st.session_state.doctor_list:
-            writer.writerow([d.doctor_id, d.doctor_name, d.specialization, d.experience, d.fee])
-
-def save_patients():
-    with open("patients.csv", "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(["patient_id", "patient_name", "age", "disease", "room_number"])
-        for p in st.session_state.patient_list:
-            writer.writerow([p.patient_id, p.patient_name, p.age, p.disease, p.room_number])
-
-def save_appointments():
-    with open("appointments.csv", "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(["appointment_id", "doctor_name", "patient_name", "date", "time"])
-        for a in st.session_state.appointment_list:
-            writer.writerow([a.appointment_id, a.doctor_name, a.patient_name, a.date, a.time])
-
-def save_bills():
-    with open("bills.csv", "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(["bill_id", "patient_name", "doctor_fee", "room_charges", "medicine_charges", "total"])
-        for b in st.session_state.bill_list:
-            writer.writerow([b.bill_id, b.patient_name, b.doctor_fee, b.room_charges, b.medicine_charges, b.total])
-
-def load_all():
-    if st.session_state.data_loaded:
-        return
-    if os.path.exists("doctors.csv"):
-        with open("doctors.csv", "r") as f:
-            for row in csv.DictReader(f):
-                st.session_state.doctor_list.append(
-                    Doctor("JAN KALYAN HOSPITAL", "Bhopal", int(row["doctor_id"]), row["doctor_name"],
-                           row["specialization"], int(row["experience"]), int(row["fee"])))
-    if os.path.exists("patients.csv"):
-        with open("patients.csv", "r") as f:
-            for row in csv.DictReader(f):
-                st.session_state.patient_list.append(
-                    Patient("JAN KALYAN HOSPITAL", "Bhopal", int(row["patient_id"]), row["patient_name"],
-                            int(row["age"]), row["disease"], row["room_number"]))
-    if os.path.exists("appointments.csv"):
-        with open("appointments.csv", "r") as f:
-            for row in csv.DictReader(f):
-                st.session_state.appointment_list.append(
-                    Appointment(int(row["appointment_id"]), row["doctor_name"],
-                                row["patient_name"], row["date"], row["time"]))
-    if os.path.exists("bills.csv"):
-        with open("bills.csv", "r") as f:
-            for row in csv.DictReader(f):
-                st.session_state.bill_list.append(
-                    Bill("JAN KALYAN HOSPITAL", "Bhopal", int(row["bill_id"]), row["patient_name"],
-                         int(row["doctor_fee"]), int(row["room_charges"]), int(row["medicine_charges"])))
-    st.session_state.data_loaded = True
-
-load_all()
+def save_csv(key: str, df: pd.DataFrame):
+    df.to_csv(FILES[key], index=False)
 
 
-# ─────────────────────────────────────────────
-# Hero Banner with SVG Building
-# ─────────────────────────────────────────────
-building_svg = """
-<svg xmlns="http://www.w3.org/2000/svg" width="320" height="220" viewBox="0 0 320 220">
-  <!-- Sky gradient background strip -->
-  <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#bbdefb" stop-opacity="0.2"/>
-      <stop offset="100%" stop-color="#1565c0" stop-opacity="0"/>
-    </linearGradient>
-    <linearGradient id="wall" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#e3f2fd"/>
-      <stop offset="100%" stop-color="#bbdefb"/>
-    </linearGradient>
-    <linearGradient id="wing" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#dce8f5"/>
-      <stop offset="100%" stop-color="#c5ddf7"/>
-    </linearGradient>
-  </defs>
+# ──────────────────────────────────────────────────────────────────
+#  SESSION STATE
+# ──────────────────────────────────────────────────────────────────
+def init_state():
+    if "doctors" not in st.session_state:
+        st.session_state.doctors = load_csv("doctors",
+            ["ID", "Name", "Specialization", "Experience (yrs)", "Fee (₹)", "Available"])
+    if "patients" not in st.session_state:
+        st.session_state.patients = load_csv("patients",
+            ["ID", "Name", "Age", "Gender", "Disease", "Room", "Admitted On"])
+    if "appointments" not in st.session_state:
+        st.session_state.appointments = load_csv("appointments",
+            ["ID", "Patient", "Doctor", "Date", "Time", "Status"])
+    if "bills" not in st.session_state:
+        st.session_state.bills = load_csv("bills",
+            ["ID", "Patient", "Doctor Fee (₹)", "Room Charges (₹)",
+             "Medicine (₹)", "Lab Charges (₹)", "Total (₹)", "Date", "Status"])
 
-  <!-- Left wing -->
-  <rect x="10" y="90" width="65" height="130" fill="url(#wing)" rx="3"/>
-  <!-- Left wing windows row 1 -->
-  <rect x="20" y="100" width="14" height="12" fill="#1565c0" opacity="0.7" rx="2"/>
-  <rect x="40" y="100" width="14" height="12" fill="#1565c0" opacity="0.7" rx="2"/>
-  <rect x="60" y="100" width="10" height="12" fill="#1565c0" opacity="0.5" rx="2"/>
-  <!-- Left wing windows row 2 -->
-  <rect x="20" y="120" width="14" height="12" fill="#1565c0" opacity="0.6" rx="2"/>
-  <rect x="40" y="120" width="14" height="12" fill="#90caf9" opacity="0.8" rx="2"/>
-  <rect x="60" y="120" width="10" height="12" fill="#1565c0" opacity="0.5" rx="2"/>
-  <!-- Left wing windows row 3 -->
-  <rect x="20" y="140" width="14" height="12" fill="#90caf9" opacity="0.7" rx="2"/>
-  <rect x="40" y="140" width="14" height="12" fill="#1565c0" opacity="0.6" rx="2"/>
-  <rect x="60" y="140" width="10" height="12" fill="#90caf9" opacity="0.5" rx="2"/>
-  <!-- Left wing windows row 4 -->
-  <rect x="20" y="160" width="14" height="12" fill="#1565c0" opacity="0.5" rx="2"/>
-  <rect x="40" y="160" width="14" height="12" fill="#90caf9" opacity="0.6" rx="2"/>
-  <rect x="60" y="160" width="10" height="12" fill="#1565c0" opacity="0.4" rx="2"/>
-  <!-- Left wing windows row 5 -->
-  <rect x="20" y="180" width="14" height="12" fill="#90caf9" opacity="0.5" rx="2"/>
-  <rect x="40" y="180" width="14" height="12" fill="#1565c0" opacity="0.5" rx="2"/>
+init_state()
 
-  <!-- Right wing -->
-  <rect x="245" y="90" width="65" height="130" fill="url(#wing)" rx="3"/>
-  <!-- Right wing windows row 1 -->
-  <rect x="250" y="100" width="14" height="12" fill="#1565c0" opacity="0.5" rx="2"/>
-  <rect x="270" y="100" width="14" height="12" fill="#1565c0" opacity="0.7" rx="2"/>
-  <rect x="290" y="100" width="14" height="12" fill="#90caf9" opacity="0.7" rx="2"/>
-  <!-- rows 2-5 similar -->
-  <rect x="250" y="120" width="14" height="12" fill="#90caf9" opacity="0.6" rx="2"/>
-  <rect x="270" y="120" width="14" height="12" fill="#1565c0" opacity="0.7" rx="2"/>
-  <rect x="290" y="120" width="14" height="12" fill="#1565c0" opacity="0.6" rx="2"/>
-  <rect x="250" y="140" width="14" height="12" fill="#1565c0" opacity="0.5" rx="2"/>
-  <rect x="270" y="140" width="14" height="12" fill="#90caf9" opacity="0.7" rx="2"/>
-  <rect x="290" y="140" width="14" height="12" fill="#1565c0" opacity="0.5" rx="2"/>
-  <rect x="250" y="160" width="14" height="12" fill="#90caf9" opacity="0.6" rx="2"/>
-  <rect x="270" y="160" width="14" height="12" fill="#1565c0" opacity="0.6" rx="2"/>
-  <rect x="290" y="160" width="14" height="12" fill="#90caf9" opacity="0.5" rx="2"/>
-  <rect x="250" y="180" width="14" height="12" fill="#1565c0" opacity="0.5" rx="2"/>
-  <rect x="270" y="180" width="14" height="12" fill="#90caf9" opacity="0.6" rx="2"/>
 
-  <!-- Main tower -->
-  <rect x="72" y="30" width="176" height="190" fill="url(#wall)" rx="4"/>
+# ──────────────────────────────────────────────────────────────────
+#  SIDEBAR NAVIGATION
+# ──────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown("""
+        <div style='text-align:center; padding: 0.8rem 0 1.4rem;'>
+            <div style='font-size:2.8rem;'>🏥</div>
+            <div style='font-family:"Playfair Display",serif; font-size:1.15rem;
+                        font-weight:800; color:#e8f4f8; line-height:1.3; margin-top:0.4rem;'>
+                JAN KALYAN<br>HOSPITAL
+            </div>
+            <div style='font-size:0.72rem; color:#8aaec0; letter-spacing:0.08em; margin-top:0.3rem;'>
+                Bhopal, M.P.
+            </div>
+        </div>
+        <hr style='border-color:rgba(15,139,141,0.2); margin-bottom:1rem;'>
+    """, unsafe_allow_html=True)
 
-  <!-- Tower top triangular roof -->
-  <polygon points="160,2 72,30 248,30" fill="#0a2342" opacity="0.85"/>
+    nav = st.radio(
+        "NAVIGATION",
+        ["🏠  Dashboard", "👨‍⚕️  Doctors", "🧑‍🤒  Patients",
+         "📅  Appointments", "🧾  Billing", "📊  Analytics"],
+        label_visibility="visible",
+    )
 
-  <!-- Red cross on roof -->
-  <rect x="152" y="8" width="16" height="16" fill="#e53935" rx="2"/>
-  <rect x="148" y="12" width="24" height="8" fill="#e53935" rx="2"/>
+    today = datetime.date.today()
+    st.markdown(f"""
+        <div style='position:absolute; bottom:1.5rem; left:1rem; right:1rem;
+                    background:rgba(15,139,141,0.1); border:1px solid rgba(15,139,141,0.2);
+                    border-radius:10px; padding:0.8rem 1rem; font-size:0.8rem; color:#8aaec0;'>
+            <div style='font-weight:600; color:#e8f4f8; margin-bottom:0.2rem;'>📆 {today.strftime("%d %b %Y")}</div>
+            <div>HMS v2.0 · JKH System</div>
+        </div>
+    """, unsafe_allow_html=True)
 
-  <!-- Main building windows - row 1 -->
-  <rect x="88" y="45" width="18" height="15" fill="#1565c0" opacity="0.7" rx="2"/>
-  <rect x="114" y="45" width="18" height="15" fill="#90caf9" opacity="0.8" rx="2"/>
-  <rect x="140" y="45" width="18" height="15" fill="#1565c0" opacity="0.7" rx="2"/>
-  <rect x="166" y="45" width="18" height="15" fill="#90caf9" opacity="0.8" rx="2"/>
-  <rect x="192" y="45" width="18" height="15" fill="#1565c0" opacity="0.7" rx="2"/>
-  <rect x="218" y="45" width="18" height="15" fill="#90caf9" opacity="0.6" rx="2"/>
+page = nav.split("  ", 1)[1].strip()
 
-  <!-- Row 2 -->
-  <rect x="88" y="70" width="18" height="15" fill="#90caf9" opacity="0.7" rx="2"/>
-  <rect x="114" y="70" width="18" height="15" fill="#1565c0" opacity="0.8" rx="2"/>
-  <rect x="140" y="70" width="18" height="15" fill="#90caf9" opacity="0.7" rx="2"/>
-  <rect x="166" y="70" width="18" height="15" fill="#1565c0" opacity="0.8" rx="2"/>
-  <rect x="192" y="70" width="18" height="15" fill="#90caf9" opacity="0.7" rx="2"/>
-  <rect x="218" y="70" width="18" height="15" fill="#1565c0" opacity="0.6" rx="2"/>
 
-  <!-- Row 3 -->
-  <rect x="88" y="95" width="18" height="15" fill="#1565c0" opacity="0.6" rx="2"/>
-  <rect x="114" y="95" width="18" height="15" fill="#90caf9" opacity="0.7" rx="2"/>
-  <rect x="140" y="95" width="18" height="15" fill="#1565c0" opacity="0.6" rx="2"/>
-  <rect x="166" y="95" width="18" height="15" fill="#90caf9" opacity="0.7" rx="2"/>
-  <rect x="192" y="95" width="18" height="15" fill="#1565c0" opacity="0.6" rx="2"/>
-  <rect x="218" y="95" width="18" height="15" fill="#90caf9" opacity="0.5" rx="2"/>
-
-  <!-- Row 4 -->
-  <rect x="88" y="120" width="18" height="15" fill="#90caf9" opacity="0.6" rx="2"/>
-  <rect x="114" y="120" width="18" height="15" fill="#1565c0" opacity="0.7" rx="2"/>
-  <rect x="192" y="120" width="18" height="15" fill="#90caf9" opacity="0.6" rx="2"/>
-  <rect x="218" y="120" width="18" height="15" fill="#1565c0" opacity="0.5" rx="2"/>
-
-  <!-- Big Red Cross on main building -->
-  <rect x="148" y="105" width="24" height="40" fill="#e53935" opacity="0.9" rx="3"/>
-  <rect x="136" y="117" width="48" height="16" fill="#e53935" opacity="0.9" rx="3"/>
-
-  <!-- Pillars at entrance -->
-  <rect x="118" y="165" width="12" height="55" fill="#b0bec5" rx="2"/>
-  <rect x="190" y="165" width="12" height="55" fill="#b0bec5" rx="2"/>
-
-  <!-- Main entrance door -->
-  <rect x="130" y="170" width="60" height="50" fill="#0a2342" opacity="0.85" rx="3"/>
-  <rect x="136" y="174" width="22" height="40" fill="#1565c0" opacity="0.6" rx="2"/>
-  <rect x="162" y="174" width="22" height="40" fill="#1565c0" opacity="0.6" rx="2"/>
-
-  <!-- Entrance canopy -->
-  <rect x="108" y="163" width="104" height="8" fill="#0a2342" opacity="0.7" rx="2"/>
-
-  <!-- Steps -->
-  <rect x="110" y="218" width="100" height="3" fill="#b0bec5" rx="1"/>
-  <rect x="115" y="215" width="90" height="3" fill="#cfd8dc" rx="1"/>
-
-  <!-- Flag pole -->
-  <line x1="160" y1="2" x2="160" y2="2" stroke="white" stroke-width="2"/>
-  <rect x="158" y="2" width="2" height="0" fill="white"/>
-</svg>
-"""
-
+# ──────────────────────────────────────────────────────────────────
+#  HEADER BANNER
+# ──────────────────────────────────────────────────────────────────
 st.markdown(f"""
-<div class="hero-banner">
-  <div class="hero-content">
-    <p class="hospital-subtitle">🏥 Serving with Compassion Since 1995</p>
-    <h1 class="hospital-title">Jan Kalyan<br>Hospital</h1>
-    <p class="hospital-tagline">"जन सेवा ही हमारा धर्म" &nbsp;·&nbsp; Bhopal, Madhya Pradesh</p>
+<div class="hosp-header">
+    <div class="hosp-logo">🏥</div>
     <div>
-      <span class="stat-pill">🩺 NABH Accredited</span>
-      <span class="stat-pill">🏨 500+ Beds</span>
-      <span class="stat-pill">⚕️ 24×7 Emergency</span>
+        <div class="hosp-name">{HOSPITAL}</div>
+        <div class="hosp-tagline">🌟 Serving Health · Spreading Hope · {LOCATION}</div>
     </div>
-  </div>
-  <div class="building-svg">{building_svg}</div>
+    <div class="hosp-badge">EST. 2005 &nbsp;|&nbsp; NABH Certified</div>
 </div>
 """, unsafe_allow_html=True)
 
 
-# ─────────────────────────────────────────────
-# Sidebar Navigation
-# ─────────────────────────────────────────────
-with st.sidebar:
-    st.markdown("### 🏥 Navigation")
-    st.markdown("---")
-    section = st.radio("", [
-        "🏠 Dashboard",
-        "👨‍⚕️ Doctors",
-        "🛏️ Patients",
-        "📅 Appointments",
-        "💳 Billing",
-        "📊 Reports"
-    ])
-    st.markdown("---")
-    st.markdown("**Jan Kalyan Hospital**")
-    st.markdown("Bhopal, Madhya Pradesh")
-    st.markdown("📞 0755-XXXXXXX")
-    st.markdown("🆘 Emergency: 108")
+# ──────────────────────────────────────────────────────────────────
+#  HELPERS
+# ──────────────────────────────────────────────────────────────────
+def next_id(df):
+    return 1 if df.empty else int(df["ID"].max()) + 1
+
+def teal_badge(text):
+    return f'<span style="background:rgba(15,139,141,0.2);border:1px solid var(--teal);color:#1ab5b8;border-radius:50px;padding:0.15rem 0.7rem;font-size:0.8rem;font-weight:600;">{text}</span>'
+
+def status_badge(s):
+    color = {"Scheduled":"#3dba7e","Cancelled":"#e05c5c","Completed":"#e6a817"}.get(s,"#8aaec0")
+    return f'<span style="color:{color};font-weight:700;">{s}</span>'
 
 
-# ─────────────────────────────────────────────
-# Dashboard
-# ─────────────────────────────────────────────
-if section == "🏠 Dashboard":
-    st.markdown('<div class="section-header">Dashboard Overview</div>', unsafe_allow_html=True)
-    total_revenue = sum(b.total for b in st.session_state.bill_list)
-    c1, c2, c3, c4, c5 = st.columns(5)
-    for col, num, label in zip(
-        [c1, c2, c3, c4, c5],
-        [len(st.session_state.doctor_list), len(st.session_state.patient_list),
-         len(st.session_state.appointment_list), len(st.session_state.bill_list),
-         f"₹{total_revenue:,}"],
-        ["Doctors", "Patients", "Appointments", "Bills", "Total Revenue"]
-    ):
-        with col:
-            st.markdown(f"""
-            <div class="report-card">
-              <div class="number">{num}</div>
-              <div class="label">{label}</div>
-            </div>""", unsafe_allow_html=True)
+# ══════════════════════════════════════════════════════════════════
+#  DASHBOARD
+# ══════════════════════════════════════════════════════════════════
+if page == "Dashboard":
+    docs  = st.session_state.doctors
+    pats  = st.session_state.patients
+    apts  = st.session_state.appointments
+    bills = st.session_state.bills
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    revenue = bills["Total (₹)"].astype(float).sum() if not bills.empty else 0
+
+    st.markdown('<div class="section-title">Dashboard Overview</div>', unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div class="metrics-row">
+        <div class="metric-card teal">
+            <div class="metric-icon">👨‍⚕️</div>
+            <div class="metric-value">{len(docs)}</div>
+            <div class="metric-label">Total Doctors</div>
+        </div>
+        <div class="metric-card gold">
+            <div class="metric-icon">🧑‍🤒</div>
+            <div class="metric-value">{len(pats)}</div>
+            <div class="metric-label">Total Patients</div>
+        </div>
+        <div class="metric-card green">
+            <div class="metric-icon">📅</div>
+            <div class="metric-value">{len(apts)}</div>
+            <div class="metric-label">Appointments</div>
+        </div>
+        <div class="metric-card purple">
+            <div class="metric-icon">💰</div>
+            <div class="metric-value">₹{revenue:,.0f}</div>
+            <div class="metric-label">Total Revenue</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     col1, col2 = st.columns(2)
+
     with col1:
-        st.markdown("#### 🆕 Recent Patients")
-        recent = st.session_state.patient_list[-3:][::-1]
-        if recent:
-            for p in recent:
-                st.markdown(f"""<div class="info-card">
-                    <h4>{p.patient_name}</h4>
-                    <p>🏥 Room: {p.room_number} &nbsp;|&nbsp; 🤒 {p.disease}</p>
-                    <p>Age: {p.age} yrs &nbsp; <span class="badge">ID #{p.patient_id}</span></p>
-                </div>""", unsafe_allow_html=True)
+        # Specialization distribution
+        if not docs.empty:
+            spec_counts = docs["Specialization"].value_counts().reset_index()
+            spec_counts.columns = ["Specialization", "Count"]
+            fig = px.pie(
+                spec_counts, values="Count", names="Specialization",
+                title="Doctors by Specialization",
+                hole=0.55,
+                color_discrete_sequence=px.colors.sequential.Teal,
+            )
+            fig.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                font_color="#e8f4f8", title_font_size=16,
+                legend=dict(font=dict(size=10)),
+                margin=dict(t=50, b=10, l=10, r=10),
+            )
+            fig.update_traces(textfont_color="#fff")
+            st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("No patients yet.")
+            st.markdown('<div class="panel"><h4>Doctors by Specialization</h4><p style="color:#8aaec0">No doctor data yet.</p></div>', unsafe_allow_html=True)
+
     with col2:
-        st.markdown("#### 📅 Upcoming Appointments")
-        recent_a = st.session_state.appointment_list[-3:][::-1]
-        if recent_a:
-            for a in recent_a:
-                st.markdown(f"""<div class="info-card">
-                    <h4>{a.patient_name}</h4>
-                    <p>👨‍⚕️ Dr. {a.doctor_name}</p>
-                    <p>📆 {a.date} &nbsp; 🕐 {a.time} &nbsp; <span class="badge">#{a.appointment_id}</span></p>
-                </div>""", unsafe_allow_html=True)
+        # Disease distribution
+        if not pats.empty:
+            dis_counts = pats["Disease"].value_counts().head(8).reset_index()
+            dis_counts.columns = ["Disease", "Count"]
+            fig2 = px.bar(
+                dis_counts, x="Count", y="Disease", orientation="h",
+                title="Top Diseases (Patients)",
+                color="Count",
+                color_continuous_scale=[[0,"#0f8b8d"],[1,"#f5c842"]],
+            )
+            fig2.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                font_color="#e8f4f8", title_font_size=16,
+                showlegend=False, coloraxis_showscale=False,
+                margin=dict(t=50, b=10, l=10, r=10),
+                yaxis=dict(gridcolor="rgba(255,255,255,0.05)"),
+                xaxis=dict(gridcolor="rgba(255,255,255,0.05)"),
+            )
+            st.plotly_chart(fig2, use_container_width=True)
         else:
-            st.info("No appointments yet.")
+            st.markdown('<div class="panel"><h4>Disease Distribution</h4><p style="color:#8aaec0">No patient data yet.</p></div>', unsafe_allow_html=True)
+
+    # Revenue chart
+    if not bills.empty and "Date" in bills.columns:
+        bills_copy = bills.copy()
+        bills_copy["Date"] = pd.to_datetime(bills_copy["Date"], errors="coerce")
+        bills_copy = bills_copy.dropna(subset=["Date"])
+        if not bills_copy.empty:
+            daily = bills_copy.groupby("Date")["Total (₹)"].sum().reset_index()
+            fig3 = px.area(
+                daily, x="Date", y="Total (₹)",
+                title="Daily Revenue Trend",
+                color_discrete_sequence=["#1ab5b8"],
+            )
+            fig3.update_traces(fill="tozeroy", fillcolor="rgba(15,139,141,0.15)")
+            fig3.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                font_color="#e8f4f8", title_font_size=16,
+                margin=dict(t=50, b=10, l=10, r=10),
+                xaxis=dict(gridcolor="rgba(255,255,255,0.05)"),
+                yaxis=dict(gridcolor="rgba(255,255,255,0.05)"),
+            )
+            st.plotly_chart(fig3, use_container_width=True)
+
+    # Recent appointments
+    if not apts.empty:
+        st.markdown('<div class="section-title" style="font-size:1.1rem;">Recent Appointments</div>', unsafe_allow_html=True)
+        recent = apts.tail(5).sort_index(ascending=False)
+        st.dataframe(recent, use_container_width=True, hide_index=True)
 
 
-# ─────────────────────────────────────────────
-# Doctors
-# ─────────────────────────────────────────────
-elif section == "👨‍⚕️ Doctors":
-    st.markdown('<div class="section-header">Doctor Management</div>', unsafe_allow_html=True)
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["➕ Add", "📋 View All", "🔍 Search", "✏️ Update Fee", "🗑️ Delete"])
+# ══════════════════════════════════════════════════════════════════
+#  DOCTORS
+# ══════════════════════════════════════════════════════════════════
+elif page == "Doctors":
+    st.markdown('<div class="section-title">👨‍⚕️ Doctor Management</div>', unsafe_allow_html=True)
+    tab1, tab2, tab3 = st.tabs(["📋 View & Search", "➕ Add Doctor", "✏️ Edit / Delete"])
 
     with tab1:
-        with st.form("add_doc"):
-            st.subheader("Add New Doctor")
-            c1, c2 = st.columns(2)
-            name = c1.text_input("Doctor Name")
-            spec = c2.text_input("Specialization")
-            exp = c1.number_input("Experience (years)", min_value=0, max_value=60, step=1)
-            fee = c2.number_input("Consultation Fee (₹)", min_value=0, step=50)
-            if st.form_submit_button("✅ Add Doctor"):
-                if name and spec:
-                    doc_id = len(st.session_state.doctor_list) + 1
-                    st.session_state.doctor_list.append(
-                        Doctor("JAN KALYAN HOSPITAL", "Bhopal", doc_id, name, spec, int(exp), int(fee)))
-                    save_doctors()
-                    st.markdown('<div class="success-msg">✅ Doctor added successfully!</div>', unsafe_allow_html=True)
-                    st.rerun()
-                else:
-                    st.markdown('<div class="error-msg">❌ Name and Specialization are required.</div>', unsafe_allow_html=True)
+        docs = st.session_state.doctors
+        col_s, col_f = st.columns([3, 1])
+        with col_s:
+            search = st.text_input("🔍 Search by name or specialization", placeholder="e.g. Sharma / Cardiologist")
+        with col_f:
+            spec_filter = st.selectbox("Filter by Specialization", ["All"] + SPECIALIZATIONS)
+
+        filtered = docs.copy()
+        if search:
+            mask = (filtered["Name"].str.contains(search, case=False, na=False) |
+                    filtered["Specialization"].str.contains(search, case=False, na=False))
+            filtered = filtered[mask]
+        if spec_filter != "All":
+            filtered = filtered[filtered["Specialization"] == spec_filter]
+
+        if filtered.empty:
+            st.warning("No doctors found.")
+        else:
+            st.success(f"{len(filtered)} doctor(s) found")
+            st.dataframe(filtered, use_container_width=True, hide_index=True)
 
     with tab2:
-        if not st.session_state.doctor_list:
-            st.info("No doctors found.")
-        else:
-            for d in st.session_state.doctor_list:
-                st.markdown(f"""<div class="info-card">
-                    <h4>Dr. {d.doctor_name} &nbsp; <span class="badge">{d.specialization}</span></h4>
-                    <p>🏥 {d.hospital_name}, {d.location}</p>
-                    <p>📅 Experience: {d.experience} yrs &nbsp;|&nbsp; 💰 Fee: ₹{d.fee} &nbsp;|&nbsp; <span class="badge">ID #{d.doctor_id}</span></p>
-                </div>""", unsafe_allow_html=True)
+        with st.form("add_doctor_form", clear_on_submit=True):
+            st.markdown('<div style="font-family:\'Playfair Display\',serif; font-size:1.1rem; color:#1ab5b8; margin-bottom:1rem;">Add New Doctor</div>', unsafe_allow_html=True)
+            c1, c2 = st.columns(2)
+            with c1:
+                d_name = st.text_input("Doctor Name *")
+                d_spec = st.selectbox("Specialization *", SPECIALIZATIONS)
+            with c2:
+                d_exp  = st.number_input("Experience (years) *", min_value=0, max_value=60, value=5)
+                d_fee  = st.number_input("Consultation Fee (₹) *", min_value=100, max_value=10000, value=500, step=50)
+            d_avail = st.selectbox("Availability", ["Yes", "No"])
+            submitted = st.form_submit_button("✅ Add Doctor")
+            if submitted:
+                if not d_name.strip():
+                    st.error("Doctor name is required.")
+                else:
+                    new_row = pd.DataFrame([{
+                        "ID": next_id(st.session_state.doctors),
+                        "Name": d_name.strip().title(),
+                        "Specialization": d_spec,
+                        "Experience (yrs)": d_exp,
+                        "Fee (₹)": d_fee,
+                        "Available": d_avail,
+                    }])
+                    st.session_state.doctors = pd.concat([st.session_state.doctors, new_row], ignore_index=True)
+                    save_csv("doctors", st.session_state.doctors)
+                    st.success(f"✅ Dr. {d_name.strip().title()} added successfully!")
 
     with tab3:
-        query = st.text_input("Search by Name")
-        if query:
-            results = [d for d in st.session_state.doctor_list if query.lower() in d.doctor_name.lower()]
-            if results:
-                for d in results:
-                    st.markdown(f"""<div class="info-card">
-                        <h4>Dr. {d.doctor_name} &nbsp; <span class="badge">{d.specialization}</span></h4>
-                        <p>📅 Experience: {d.experience} yrs &nbsp;|&nbsp; 💰 Fee: ₹{d.fee} &nbsp;|&nbsp; <span class="badge">ID #{d.doctor_id}</span></p>
-                    </div>""", unsafe_allow_html=True)
-            else:
-                st.markdown('<div class="error-msg">❌ No doctor found.</div>', unsafe_allow_html=True)
-
-    with tab4:
-        if st.session_state.doctor_list:
-            options = {f"#{d.doctor_id} - Dr. {d.doctor_name}": d for d in st.session_state.doctor_list}
-            sel = st.selectbox("Select Doctor", list(options.keys()))
-            doc = options[sel]
-            st.write(f"Current Fee: **₹{doc.fee}**")
-            new_fee = st.number_input("New Fee (₹)", min_value=0, value=doc.fee, step=50)
-            if st.button("💾 Update Fee"):
-                doc.fee = int(new_fee)
-                save_doctors()
-                st.markdown('<div class="success-msg">✅ Fee updated!</div>', unsafe_allow_html=True)
-                st.rerun()
+        docs = st.session_state.doctors
+        if docs.empty:
+            st.info("No doctors to edit.")
         else:
-            st.info("No doctors to update.")
+            doc_opts = {f"ID {r['ID']} – {r['Name']}": r["ID"] for _, r in docs.iterrows()}
+            sel = st.selectbox("Select Doctor", list(doc_opts.keys()))
+            sel_id = doc_opts[sel]
+            row = docs[docs["ID"] == sel_id].iloc[0]
 
-    with tab5:
-        if st.session_state.doctor_list:
-            options = {f"#{d.doctor_id} - Dr. {d.doctor_name}": d for d in st.session_state.doctor_list}
-            sel = st.selectbox("Select Doctor to Delete", list(options.keys()))
-            if st.button("🗑️ Delete Doctor", type="primary"):
-                st.session_state.doctor_list.remove(options[sel])
-                save_doctors()
-                st.markdown('<div class="success-msg">✅ Doctor deleted.</div>', unsafe_allow_html=True)
-                st.rerun()
-        else:
-            st.info("No doctors to delete.")
+            with st.form("edit_doctor_form"):
+                ec1, ec2 = st.columns(2)
+                with ec1:
+                    new_spec = st.selectbox("Specialization", SPECIALIZATIONS,
+                        index=SPECIALIZATIONS.index(row["Specialization"]) if row["Specialization"] in SPECIALIZATIONS else 0)
+                    new_exp  = st.number_input("Experience (yrs)", min_value=0, max_value=60,
+                        value=int(row["Experience (yrs)"]))
+                with ec2:
+                    new_fee   = st.number_input("Fee (₹)", min_value=100, max_value=10000,
+                        value=int(row["Fee (₹)"]), step=50)
+                    new_avail = st.selectbox("Available", ["Yes", "No"],
+                        index=0 if row.get("Available", "Yes") == "Yes" else 1)
+
+                upd, dele = st.columns(2)
+                with upd:
+                    if st.form_submit_button("💾 Update"):
+                        mask = st.session_state.doctors["ID"] == sel_id
+                        st.session_state.doctors.loc[mask, "Specialization"]   = new_spec
+                        st.session_state.doctors.loc[mask, "Experience (yrs)"] = new_exp
+                        st.session_state.doctors.loc[mask, "Fee (₹)"]          = new_fee
+                        st.session_state.doctors.loc[mask, "Available"]        = new_avail
+                        save_csv("doctors", st.session_state.doctors)
+                        st.success("✅ Doctor updated!")
+                with dele:
+                    if st.form_submit_button("🗑️ Delete Doctor"):
+                        st.session_state.doctors = docs[docs["ID"] != sel_id].reset_index(drop=True)
+                        save_csv("doctors", st.session_state.doctors)
+                        st.success("✅ Doctor deleted!")
+                        st.rerun()
 
 
-# ─────────────────────────────────────────────
-# Patients
-# ─────────────────────────────────────────────
-elif section == "🛏️ Patients":
-    st.markdown('<div class="section-header">Patient Management</div>', unsafe_allow_html=True)
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["➕ Add", "📋 View All", "🔍 Search", "✏️ Update Room", "🗑️ Delete"])
+# ══════════════════════════════════════════════════════════════════
+#  PATIENTS
+# ══════════════════════════════════════════════════════════════════
+elif page == "Patients":
+    st.markdown('<div class="section-title">🧑‍🤒 Patient Management</div>', unsafe_allow_html=True)
+    tab1, tab2, tab3 = st.tabs(["📋 View & Search", "➕ Admit Patient", "✏️ Edit / Discharge"])
 
     with tab1:
-        with st.form("add_pat"):
-            st.subheader("Admit New Patient")
-            c1, c2 = st.columns(2)
-            name = c1.text_input("Patient Name")
-            age = c2.number_input("Age", min_value=0, max_value=120, step=1)
-            disease = c1.text_input("Disease / Diagnosis")
-            room = c2.text_input("Room Number")
-            if st.form_submit_button("✅ Admit Patient"):
-                if name and disease and room:
-                    pat_id = len(st.session_state.patient_list) + 1
-                    st.session_state.patient_list.append(
-                        Patient("JAN KALYAN HOSPITAL", "Bhopal", pat_id, name, int(age), disease, room))
-                    save_patients()
-                    st.markdown('<div class="success-msg">✅ Patient admitted!</div>', unsafe_allow_html=True)
-                    st.rerun()
-                else:
-                    st.markdown('<div class="error-msg">❌ All fields are required.</div>', unsafe_allow_html=True)
+        pats = st.session_state.patients
+        c1, c2 = st.columns([3, 1])
+        with c1:
+            srch = st.text_input("🔍 Search by name, disease, or room", placeholder="e.g. Rahul / Malaria / 101")
+        with c2:
+            dis_filter = st.selectbox("Filter Disease", ["All"] + DISEASES)
+
+        fp = pats.copy()
+        if srch:
+            mask = (fp["Name"].str.contains(srch, case=False, na=False) |
+                    fp["Disease"].str.contains(srch, case=False, na=False) |
+                    fp["Room"].astype(str).str.contains(srch, case=False, na=False))
+            fp = fp[mask]
+        if dis_filter != "All":
+            fp = fp[fp["Disease"] == dis_filter]
+
+        if fp.empty:
+            st.warning("No patients found.")
+        else:
+            st.success(f"{len(fp)} patient(s) found")
+            st.dataframe(fp, use_container_width=True, hide_index=True)
 
     with tab2:
-        if not st.session_state.patient_list:
-            st.info("No patients found.")
-        else:
-            for p in st.session_state.patient_list:
-                st.markdown(f"""<div class="info-card">
-                    <h4>{p.patient_name} &nbsp; <span class="badge">Room {p.room_number}</span></h4>
-                    <p>🏥 {p.hospital_name} &nbsp;|&nbsp; Age: {p.age} yrs</p>
-                    <p>🤒 Diagnosis: {p.disease} &nbsp; <span class="badge">ID #{p.patient_id}</span></p>
-                </div>""", unsafe_allow_html=True)
-
-    with tab3:
-        method = st.radio("Search by", ["Name", "ID"], horizontal=True)
-        if method == "Name":
-            q = st.text_input("Patient Name")
-            results = [p for p in st.session_state.patient_list if q.lower() in p.patient_name.lower()] if q else []
-        else:
-            pid = st.number_input("Patient ID", min_value=1, step=1)
-            results = [p for p in st.session_state.patient_list if p.patient_id == int(pid)]
-        for p in results:
-            st.markdown(f"""<div class="info-card">
-                <h4>{p.patient_name} &nbsp; <span class="badge">Room {p.room_number}</span></h4>
-                <p>Age: {p.age} yrs &nbsp;|&nbsp; 🤒 {p.disease} &nbsp; <span class="badge">ID #{p.patient_id}</span></p>
-            </div>""", unsafe_allow_html=True)
-        if (method == "Name" and q and not results) or (method == "ID" and not results):
-            st.markdown('<div class="error-msg">❌ Patient not found.</div>', unsafe_allow_html=True)
-
-    with tab4:
-        if st.session_state.patient_list:
-            options = {f"#{p.patient_id} - {p.patient_name}": p for p in st.session_state.patient_list}
-            sel = st.selectbox("Select Patient", list(options.keys()))
-            pat = options[sel]
-            st.write(f"Current Room: **{pat.room_number}**")
-            new_room = st.text_input("New Room Number", value=pat.room_number)
-            if st.button("💾 Update Room"):
-                pat.room_number = new_room
-                save_patients()
-                st.markdown('<div class="success-msg">✅ Room updated!</div>', unsafe_allow_html=True)
-                st.rerun()
-        else:
-            st.info("No patients to update.")
-
-    with tab5:
-        if st.session_state.patient_list:
-            options = {f"#{p.patient_id} - {p.patient_name}": p for p in st.session_state.patient_list}
-            sel = st.selectbox("Select Patient to Delete", list(options.keys()))
-            if st.button("🗑️ Delete Patient", type="primary"):
-                st.session_state.patient_list.remove(options[sel])
-                save_patients()
-                st.markdown('<div class="success-msg">✅ Patient record deleted.</div>', unsafe_allow_html=True)
-                st.rerun()
-        else:
-            st.info("No patients to delete.")
-
-
-# ─────────────────────────────────────────────
-# Appointments
-# ─────────────────────────────────────────────
-elif section == "📅 Appointments":
-    st.markdown('<div class="section-header">Appointment Management</div>', unsafe_allow_html=True)
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["➕ Book", "📋 View All", "🔍 Search by Date", "✏️ Update", "❌ Cancel"])
-
-    with tab1:
-        with st.form("book_appt"):
-            st.subheader("Book New Appointment")
-            c1, c2 = st.columns(2)
-            doc = c1.text_input("Doctor Name")
-            pat = c2.text_input("Patient Name")
-            date = c1.text_input("Date (DD-MM-YYYY)")
-            time = c2.text_input("Time (e.g. 10:00 AM)")
-            if st.form_submit_button("✅ Book Appointment"):
-                if doc and pat and date and time:
-                    appt_id = len(st.session_state.appointment_list) + 1
-                    st.session_state.appointment_list.append(
-                        Appointment(appt_id, doc, pat, date, time))
-                    save_appointments()
-                    st.markdown('<div class="success-msg">✅ Appointment booked!</div>', unsafe_allow_html=True)
-                    st.rerun()
-                else:
-                    st.markdown('<div class="error-msg">❌ All fields required.</div>', unsafe_allow_html=True)
-
-    with tab2:
-        if not st.session_state.appointment_list:
-            st.info("No appointments found.")
-        else:
-            for a in st.session_state.appointment_list:
-                st.markdown(f"""<div class="info-card">
-                    <h4>{a.patient_name} &nbsp; <span class="badge">#{a.appointment_id}</span></h4>
-                    <p>👨‍⚕️ Dr. {a.doctor_name}</p>
-                    <p>📆 {a.date} &nbsp; 🕐 {a.time}</p>
-                </div>""", unsafe_allow_html=True)
-
-    with tab3:
-        date_q = st.text_input("Enter Date (DD-MM-YYYY)")
-        if date_q:
-            results = [a for a in st.session_state.appointment_list if a.date == date_q]
-            if results:
-                for a in results:
-                    st.markdown(f"""<div class="info-card">
-                        <h4>{a.patient_name} → Dr. {a.doctor_name}</h4>
-                        <p>📆 {a.date} &nbsp; 🕐 {a.time} &nbsp; <span class="badge">#{a.appointment_id}</span></p>
-                    </div>""", unsafe_allow_html=True)
-            else:
-                st.markdown('<div class="error-msg">❌ No appointments on this date.</div>', unsafe_allow_html=True)
-
-    with tab4:
-        if st.session_state.appointment_list:
-            options = {f"#{a.appointment_id} - {a.patient_name} ({a.date})": a for a in st.session_state.appointment_list}
-            sel = st.selectbox("Select Appointment", list(options.keys()))
-            appt = options[sel]
-            c1, c2 = st.columns(2)
-            new_date = c1.text_input("New Date (DD-MM-YYYY)", value=appt.date)
-            new_time = c2.text_input("New Time", value=appt.time)
-            if st.button("💾 Update Appointment"):
-                appt.date = new_date
-                appt.time = new_time
-                save_appointments()
-                st.markdown('<div class="success-msg">✅ Appointment updated!</div>', unsafe_allow_html=True)
-                st.rerun()
-        else:
-            st.info("No appointments to update.")
-
-    with tab5:
-        if st.session_state.appointment_list:
-            options = {f"#{a.appointment_id} - {a.patient_name} ({a.date})": a for a in st.session_state.appointment_list}
-            sel = st.selectbox("Select Appointment to Cancel", list(options.keys()))
-            if st.button("❌ Cancel Appointment", type="primary"):
-                st.session_state.appointment_list.remove(options[sel])
-                save_appointments()
-                st.markdown('<div class="success-msg">✅ Appointment cancelled.</div>', unsafe_allow_html=True)
-                st.rerun()
-        else:
-            st.info("No appointments to cancel.")
-
-
-# ─────────────────────────────────────────────
-# Billing
-# ─────────────────────────────────────────────
-elif section == "💳 Billing":
-    st.markdown('<div class="section-header">Billing & Finance</div>', unsafe_allow_html=True)
-    tab1, tab2 = st.tabs(["🧾 Generate Bill", "📋 View All Bills"])
-
-    with tab1:
-        with st.form("gen_bill"):
-            st.subheader("Generate Patient Bill")
-            name = st.text_input("Patient Name")
+        with st.form("add_patient_form", clear_on_submit=True):
+            st.markdown('<div style="font-family:\'Playfair Display\',serif; font-size:1.1rem; color:#1ab5b8; margin-bottom:1rem;">Admit New Patient</div>', unsafe_allow_html=True)
             c1, c2, c3 = st.columns(3)
-            doc_fee = c1.number_input("Doctor Fee (₹)", min_value=0, step=100)
-            room_ch = c2.number_input("Room Charges (₹)", min_value=0, step=100)
-            med_ch  = c3.number_input("Medicine Charges (₹)", min_value=0, step=100)
-            if st.form_submit_button("🧾 Generate Bill"):
-                if name:
-                    bill_id = len(st.session_state.bill_list) + 1
-                    b = Bill("JAN KALYAN HOSPITAL", "Bhopal", bill_id, name, int(doc_fee), int(room_ch), int(med_ch))
-                    st.session_state.bill_list.append(b)
-                    save_bills()
-                    st.markdown(f"""
-                    <div class="bill-box">
-                      <h3>🏥 Jan Kalyan Hospital<br><small style="font-size:0.75rem;color:#666;">Bhopal, Madhya Pradesh</small></h3>
-                      <div class="bill-row"><span>Bill ID</span><span>#{b.bill_id}</span></div>
-                      <div class="bill-row"><span>Patient Name</span><span>{b.patient_name}</span></div>
-                      <div class="bill-row"><span>Doctor Fee</span><span>₹{b.doctor_fee:,}</span></div>
-                      <div class="bill-row"><span>Room Charges</span><span>₹{b.room_charges:,}</span></div>
-                      <div class="bill-row"><span>Medicine Charges</span><span>₹{b.medicine_charges:,}</span></div>
-                      <div class="bill-total"><span>TOTAL AMOUNT</span><span>₹{b.total:,}</span></div>
-                    </div>""", unsafe_allow_html=True)
+            with c1:
+                p_name = st.text_input("Patient Name *")
+                p_age  = st.number_input("Age *", min_value=0, max_value=120, value=30)
+            with c2:
+                p_gen  = st.selectbox("Gender", ["Male", "Female", "Other"])
+                p_dis  = st.selectbox("Disease *", DISEASES)
+            with c3:
+                p_room = st.text_input("Room Number *", placeholder="e.g. 201-A")
+                p_date = st.date_input("Admission Date", value=datetime.date.today())
+            if st.form_submit_button("✅ Admit Patient"):
+                if not p_name.strip() or not p_room.strip():
+                    st.error("Name and room number are required.")
                 else:
-                    st.markdown('<div class="error-msg">❌ Patient name is required.</div>', unsafe_allow_html=True)
+                    new_p = pd.DataFrame([{
+                        "ID": next_id(st.session_state.patients),
+                        "Name": p_name.strip().title(),
+                        "Age": p_age,
+                        "Gender": p_gen,
+                        "Disease": p_dis,
+                        "Room": p_room.strip().upper(),
+                        "Admitted On": str(p_date),
+                    }])
+                    st.session_state.patients = pd.concat([st.session_state.patients, new_p], ignore_index=True)
+                    save_csv("patients", st.session_state.patients)
+                    st.success(f"✅ {p_name.strip().title()} admitted in Room {p_room.strip().upper()}!")
+
+    with tab3:
+        pats = st.session_state.patients
+        if pats.empty:
+            st.info("No patients to edit.")
+        else:
+            p_opts = {f"ID {r['ID']} – {r['Name']} (Room {r['Room']})": r["ID"] for _, r in pats.iterrows()}
+            sel_p  = st.selectbox("Select Patient", list(p_opts.keys()))
+            sel_pid = p_opts[sel_p]
+            prow = pats[pats["ID"] == sel_pid].iloc[0]
+
+            with st.form("edit_patient"):
+                pc1, pc2 = st.columns(2)
+                with pc1:
+                    new_dis  = st.selectbox("Disease", DISEASES,
+                        index=DISEASES.index(prow["Disease"]) if prow["Disease"] in DISEASES else 0)
+                with pc2:
+                    new_room = st.text_input("Room Number", value=str(prow["Room"]))
+
+                pu, pd_ = st.columns(2)
+                with pu:
+                    if st.form_submit_button("💾 Update"):
+                        m = st.session_state.patients["ID"] == sel_pid
+                        st.session_state.patients.loc[m, "Disease"] = new_dis
+                        st.session_state.patients.loc[m, "Room"]    = new_room.strip().upper()
+                        save_csv("patients", st.session_state.patients)
+                        st.success("✅ Patient record updated!")
+                with pd_:
+                    if st.form_submit_button("🚪 Discharge Patient"):
+                        st.session_state.patients = pats[pats["ID"] != sel_pid].reset_index(drop=True)
+                        save_csv("patients", st.session_state.patients)
+                        st.success("✅ Patient discharged!")
+                        st.rerun()
+
+
+# ══════════════════════════════════════════════════════════════════
+#  APPOINTMENTS
+# ══════════════════════════════════════════════════════════════════
+elif page == "Appointments":
+    st.markdown('<div class="section-title">📅 Appointment Management</div>', unsafe_allow_html=True)
+    tab1, tab2, tab3 = st.tabs(["📋 All Appointments", "➕ Book Appointment", "✏️ Update / Cancel"])
+
+    with tab1:
+        apts = st.session_state.appointments
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            date_filter = st.date_input("Filter by Date", value=None)
+        with c2:
+            stat_filter = st.selectbox("Status", ["All", "Scheduled", "Completed", "Cancelled"])
+        with c3:
+            apt_srch = st.text_input("🔍 Search Patient / Doctor")
+
+        fa = apts.copy()
+        if date_filter:
+            fa = fa[fa["Date"] == str(date_filter)]
+        if stat_filter != "All":
+            fa = fa[fa["Status"] == stat_filter]
+        if apt_srch:
+            fa = fa[fa["Patient"].str.contains(apt_srch, case=False, na=False) |
+                    fa["Doctor"].str.contains(apt_srch, case=False, na=False)]
+
+        if fa.empty:
+            st.warning("No appointments found.")
+        else:
+            st.success(f"{len(fa)} appointment(s) found")
+            st.dataframe(fa, use_container_width=True, hide_index=True)
 
     with tab2:
-        if not st.session_state.bill_list:
+        with st.form("book_appt", clear_on_submit=True):
+            st.markdown('<div style="font-family:\'Playfair Display\',serif; font-size:1.1rem; color:#1ab5b8; margin-bottom:1rem;">Book New Appointment</div>', unsafe_allow_html=True)
+            docs_list = (list(st.session_state.doctors["Name"]) if not st.session_state.doctors.empty else [])
+            pats_list = (list(st.session_state.patients["Name"]) if not st.session_state.patients.empty else [])
+
+            c1, c2 = st.columns(2)
+            with c1:
+                if pats_list:
+                    a_pat = st.selectbox("Patient *", pats_list)
+                else:
+                    a_pat = st.text_input("Patient Name *", placeholder="No patients found – type manually")
+                a_date = st.date_input("Date *", value=datetime.date.today())
+            with c2:
+                if docs_list:
+                    a_doc = st.selectbox("Doctor *", docs_list)
+                else:
+                    a_doc = st.text_input("Doctor Name *", placeholder="No doctors found – type manually")
+                a_time = st.selectbox("Time Slot *",
+                    ["09:00 AM","09:30 AM","10:00 AM","10:30 AM","11:00 AM","11:30 AM",
+                     "12:00 PM","02:00 PM","02:30 PM","03:00 PM","03:30 PM","04:00 PM","04:30 PM","05:00 PM"])
+
+            if st.form_submit_button("✅ Book Appointment"):
+                if not str(a_pat).strip() or not str(a_doc).strip():
+                    st.error("Patient and doctor are required.")
+                else:
+                    new_a = pd.DataFrame([{
+                        "ID":      next_id(st.session_state.appointments),
+                        "Patient": str(a_pat).strip().title(),
+                        "Doctor":  str(a_doc).strip().title(),
+                        "Date":    str(a_date),
+                        "Time":    a_time,
+                        "Status":  "Scheduled",
+                    }])
+                    st.session_state.appointments = pd.concat([st.session_state.appointments, new_a], ignore_index=True)
+                    save_csv("appointments", st.session_state.appointments)
+                    st.success(f"✅ Appointment booked for {a_pat} with {a_doc} on {a_date} at {a_time}!")
+
+    with tab3:
+        apts = st.session_state.appointments
+        if apts.empty:
+            st.info("No appointments to update.")
+        else:
+            a_opts = {f"ID {r['ID']} – {r['Patient']} → Dr.{r['Doctor']} | {r['Date']} {r['Time']}": r["ID"]
+                      for _, r in apts.iterrows()}
+            sel_a   = st.selectbox("Select Appointment", list(a_opts.keys()))
+            sel_aid = a_opts[sel_a]
+            arow    = apts[apts["ID"] == sel_aid].iloc[0]
+
+            with st.form("edit_appt"):
+                ec1, ec2, ec3 = st.columns(3)
+                with ec1:
+                    n_date = st.date_input("New Date", value=pd.to_datetime(arow["Date"]).date())
+                with ec2:
+                    n_time = st.selectbox("New Time",
+                        ["09:00 AM","09:30 AM","10:00 AM","10:30 AM","11:00 AM","11:30 AM",
+                         "12:00 PM","02:00 PM","02:30 PM","03:00 PM","03:30 PM","04:00 PM","04:30 PM","05:00 PM"])
+                with ec3:
+                    n_stat = st.selectbox("Status", ["Scheduled", "Completed", "Cancelled"],
+                        index=["Scheduled","Completed","Cancelled"].index(arow.get("Status","Scheduled")))
+
+                ua, ca = st.columns(2)
+                with ua:
+                    if st.form_submit_button("💾 Update"):
+                        m = st.session_state.appointments["ID"] == sel_aid
+                        st.session_state.appointments.loc[m, "Date"]   = str(n_date)
+                        st.session_state.appointments.loc[m, "Time"]   = n_time
+                        st.session_state.appointments.loc[m, "Status"] = n_stat
+                        save_csv("appointments", st.session_state.appointments)
+                        st.success("✅ Appointment updated!")
+                with ca:
+                    if st.form_submit_button("❌ Cancel Appointment"):
+                        m = st.session_state.appointments["ID"] == sel_aid
+                        st.session_state.appointments.loc[m, "Status"] = "Cancelled"
+                        save_csv("appointments", st.session_state.appointments)
+                        st.success("✅ Appointment cancelled!")
+                        st.rerun()
+
+
+# ══════════════════════════════════════════════════════════════════
+#  BILLING
+# ══════════════════════════════════════════════════════════════════
+elif page == "Billing":
+    st.markdown('<div class="section-title">🧾 Billing & Payments</div>', unsafe_allow_html=True)
+    tab1, tab2 = st.tabs(["➕ Generate Bill", "📋 All Bills"])
+
+    with tab1:
+        pats_list = (list(st.session_state.patients["Name"]) if not st.session_state.patients.empty else [])
+        docs_list = (list(st.session_state.doctors["Name"])  if not st.session_state.doctors.empty  else [])
+
+        with st.form("gen_bill", clear_on_submit=False):
+            st.markdown('<div style="font-family:\'Playfair Display\',serif; font-size:1.1rem; color:#1ab5b8; margin-bottom:1rem;">Generate Patient Bill</div>', unsafe_allow_html=True)
+            c1, c2 = st.columns(2)
+            with c1:
+                if pats_list:
+                    b_pat = st.selectbox("Patient *", pats_list)
+                else:
+                    b_pat = st.text_input("Patient Name *")
+                b_doc_fee  = st.number_input("Doctor Consultation Fee (₹)", min_value=0, value=500, step=50)
+                b_room     = st.number_input("Room Charges / Day (₹)", min_value=0, value=1000, step=100)
+            with c2:
+                if docs_list:
+                    b_doc = st.selectbox("Attending Doctor", docs_list)
+                else:
+                    b_doc = st.text_input("Attending Doctor")
+                b_med   = st.number_input("Medicine Charges (₹)", min_value=0, value=300, step=50)
+                b_lab   = st.number_input("Lab / Diagnostic Charges (₹)", min_value=0, value=200, step=50)
+
+            b_status = st.selectbox("Payment Status", ["Pending", "Paid", "Partial"])
+            total    = b_doc_fee + b_room + b_med + b_lab
+
+            # Live total preview
+            st.markdown(f"""
+            <div style="background:linear-gradient(135deg,rgba(15,139,141,0.2),rgba(230,168,23,0.1));
+                        border:1px solid rgba(15,139,141,0.3); border-radius:12px;
+                        padding:1rem 1.4rem; margin:0.8rem 0; display:flex; align-items:center; gap:1rem;">
+                <span style="font-size:1.8rem;">💰</span>
+                <div>
+                    <div style="font-size:0.8rem; color:#8aaec0; letter-spacing:0.06em;">TOTAL AMOUNT</div>
+                    <div style="font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; color:#f5c842;">
+                        ₹{total:,}
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            if st.form_submit_button("🧾 Generate Bill"):
+                if not str(b_pat).strip():
+                    st.error("Patient name is required.")
+                else:
+                    new_b = pd.DataFrame([{
+                        "ID":               next_id(st.session_state.bills),
+                        "Patient":          str(b_pat).strip().title(),
+                        "Doctor Fee (₹)":   b_doc_fee,
+                        "Room Charges (₹)": b_room,
+                        "Medicine (₹)":     b_med,
+                        "Lab Charges (₹)":  b_lab,
+                        "Total (₹)":        total,
+                        "Date":             str(datetime.date.today()),
+                        "Status":           b_status,
+                    }])
+                    st.session_state.bills = pd.concat([st.session_state.bills, new_b], ignore_index=True)
+                    save_csv("bills", st.session_state.bills)
+                    st.success(f"✅ Bill generated for {b_pat}! Total: ₹{total:,}")
+                    st.balloons()
+
+    with tab2:
+        bills = st.session_state.bills
+        if bills.empty:
             st.info("No bills generated yet.")
         else:
-            for b in st.session_state.bill_list:
-                st.markdown(f"""<div class="info-card">
-                    <h4>{b.patient_name} &nbsp; <span class="badge">Bill #{b.bill_id}</span></h4>
-                    <p>💊 Medicine: ₹{b.medicine_charges:,} &nbsp;|&nbsp; 🛏️ Room: ₹{b.room_charges:,} &nbsp;|&nbsp; 🩺 Doctor: ₹{b.doctor_fee:,}</p>
-                    <p><strong>Total: ₹{b.total:,}</strong></p>
-                </div>""", unsafe_allow_html=True)
+            total_rev = bills["Total (₹)"].astype(float).sum()
+            paid      = bills[bills["Status"] == "Paid"]["Total (₹)"].astype(float).sum()
+            pending   = bills[bills["Status"] == "Pending"]["Total (₹)"].astype(float).sum()
+
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Total Revenue", f"₹{total_rev:,.0f}")
+            c2.metric("Paid",          f"₹{paid:,.0f}")
+            c3.metric("Pending",       f"₹{pending:,.0f}")
+
+            st.dataframe(bills, use_container_width=True, hide_index=True)
 
 
-# ─────────────────────────────────────────────
-# Reports
-# ─────────────────────────────────────────────
-elif section == "📊 Reports":
-    st.markdown('<div class="section-header">Hospital Reports</div>', unsafe_allow_html=True)
-    total_revenue = sum(b.total for b in st.session_state.bill_list)
-    c1, c2, c3 = st.columns(3)
-    metrics = [
-        ("👨‍⚕️", len(st.session_state.doctor_list), "Total Doctors"),
-        ("🛏️", len(st.session_state.patient_list), "Total Patients"),
-        ("📅", len(st.session_state.appointment_list), "Appointments"),
-    ]
-    for col, (icon, num, label) in zip([c1, c2, c3], metrics):
-        with col:
-            st.markdown(f"""<div class="report-card">
-                <div style="font-size:2rem">{icon}</div>
-                <div class="number">{num}</div>
-                <div class="label">{label}</div>
-            </div>""", unsafe_allow_html=True)
+# ══════════════════════════════════════════════════════════════════
+#  ANALYTICS
+# ══════════════════════════════════════════════════════════════════
+elif page == "Analytics":
+    st.markdown('<div class="section-title">📊 Hospital Analytics</div>', unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    c4, c5 = st.columns(2)
+    docs  = st.session_state.doctors
+    pats  = st.session_state.patients
+    apts  = st.session_state.appointments
+    bills = st.session_state.bills
+
+    # KPI row
+    revenue = bills["Total (₹)"].astype(float).sum() if not bills.empty else 0
+    avg_fee = docs["Fee (₹)"].astype(float).mean()  if not docs.empty  else 0
+    st.markdown(f"""
+    <div class="metrics-row">
+        <div class="metric-card teal">
+            <div class="metric-icon">🏥</div>
+            <div class="metric-value">{len(docs)}</div>
+            <div class="metric-label">Doctors</div>
+        </div>
+        <div class="metric-card gold">
+            <div class="metric-icon">👥</div>
+            <div class="metric-value">{len(pats)}</div>
+            <div class="metric-label">Patients</div>
+        </div>
+        <div class="metric-card green">
+            <div class="metric-icon">💰</div>
+            <div class="metric-value">₹{revenue:,.0f}</div>
+            <div class="metric-label">Revenue</div>
+        </div>
+        <div class="metric-card purple">
+            <div class="metric-icon">📊</div>
+            <div class="metric-value">₹{avg_fee:,.0f}</div>
+            <div class="metric-label">Avg Doc Fee</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    c1, c2 = st.columns(2)
+
+    # Appointments by status
+    with c1:
+        if not apts.empty:
+            stat_cnt = apts["Status"].value_counts().reset_index()
+            stat_cnt.columns = ["Status", "Count"]
+            fig = px.pie(stat_cnt, values="Count", names="Status",
+                         title="Appointment Status Breakdown",
+                         color_discrete_sequence=["#3dba7e","#e05c5c","#e6a817"])
+            fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", font_color="#e8f4f8",
+                              title_font_size=15, margin=dict(t=50,b=10,l=10,r=10))
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No appointment data.")
+
+    # Doctor fee comparison
+    with c2:
+        if not docs.empty:
+            top_docs = docs.nlargest(8, "Fee (₹)")
+            fig2 = px.bar(top_docs, x="Fee (₹)", y="Name", orientation="h",
+                          title="Top Doctors by Fee",
+                          color="Fee (₹)",
+                          color_continuous_scale=[[0,"#0f8b8d"],[1,"#e6a817"]])
+            fig2.update_layout(paper_bgcolor="rgba(0,0,0,0)", font_color="#e8f4f8",
+                               title_font_size=15, coloraxis_showscale=False,
+                               margin=dict(t=50,b=10,l=10,r=10),
+                               yaxis=dict(gridcolor="rgba(255,255,255,0.05)"),
+                               xaxis=dict(gridcolor="rgba(255,255,255,0.05)"))
+            st.plotly_chart(fig2, use_container_width=True)
+        else:
+            st.info("No doctor data.")
+
+    # Age distribution
+    c3, c4 = st.columns(2)
+    with c3:
+        if not pats.empty:
+            fig3 = px.histogram(pats, x="Age", nbins=15, title="Patient Age Distribution",
+                                color_discrete_sequence=["#1ab5b8"])
+            fig3.update_layout(paper_bgcolor="rgba(0,0,0,0)", font_color="#e8f4f8",
+                               title_font_size=15, bargap=0.05,
+                               margin=dict(t=50,b=10,l=10,r=10),
+                               plot_bgcolor="rgba(0,0,0,0)",
+                               xaxis=dict(gridcolor="rgba(255,255,255,0.05)"),
+                               yaxis=dict(gridcolor="rgba(255,255,255,0.05)"))
+            st.plotly_chart(fig3, use_container_width=True)
+        else:
+            st.info("No patient data.")
+
+    # Bill component breakdown
     with c4:
-        st.markdown(f"""<div class="report-card">
-            <div style="font-size:2rem">🧾</div>
-            <div class="number">{len(st.session_state.bill_list)}</div>
-            <div class="label">Total Bills</div>
-        </div>""", unsafe_allow_html=True)
-    with c5:
-        st.markdown(f"""<div class="report-card">
-            <div style="font-size:2rem">💰</div>
-            <div class="number">₹{total_revenue:,}</div>
-            <div class="label">Total Revenue</div>
-        </div>""", unsafe_allow_html=True)
+        if not bills.empty:
+            doc_total  = bills["Doctor Fee (₹)"].astype(float).sum()
+            room_total = bills["Room Charges (₹)"].astype(float).sum()
+            med_total  = bills["Medicine (₹)"].astype(float).sum()
+            lab_total  = bills["Lab Charges (₹)"].astype(float).sum()
+            labels = ["Doctor Fee", "Room Charges", "Medicine", "Lab"]
+            values = [doc_total, room_total, med_total, lab_total]
+            fig4 = go.Figure(go.Bar(
+                x=labels, y=values,
+                marker_color=["#0f8b8d","#e6a817","#3dba7e","#8b5cf6"],
+            ))
+            fig4.update_layout(title="Revenue by Component",
+                               paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                               font_color="#e8f4f8", title_font_size=15,
+                               margin=dict(t=50,b=10,l=10,r=10),
+                               xaxis=dict(gridcolor="rgba(255,255,255,0.05)"),
+                               yaxis=dict(gridcolor="rgba(255,255,255,0.05)"))
+            st.plotly_chart(fig4, use_container_width=True)
+        else:
+            st.info("No billing data.")
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.session_state.doctor_list:
-        st.markdown("#### 👨‍⚕️ Doctors by Specialization")
-        specs = {}
-        for d in st.session_state.doctor_list:
-            specs[d.specialization] = specs.get(d.specialization, 0) + 1
-        st.bar_chart(specs)
+    # Gender pie
+    if not pats.empty and "Gender" in pats.columns:
+        gen_cnt = pats["Gender"].value_counts().reset_index()
+        gen_cnt.columns = ["Gender", "Count"]
+        fig5 = px.pie(gen_cnt, values="Count", names="Gender",
+                      title="Patient Gender Distribution",
+                      color_discrete_sequence=["#1ab5b8","#e6a817","#8b5cf6"],
+                      hole=0.45)
+        fig5.update_layout(paper_bgcolor="rgba(0,0,0,0)", font_color="#e8f4f8",
+                           title_font_size=15, margin=dict(t=50,b=10,l=10,r=10))
+        st.plotly_chart(fig5, use_container_width=True)
+
+
+# ──────────────────────────────────────────────────────────────────
+#  FOOTER
+# ──────────────────────────────────────────────────────────────────
+st.markdown("---")
+st.markdown(f"""
+<div style="text-align:center; color:#8aaec0; font-size:0.82rem; padding:0.6rem 0;">
+    🏥 <strong style="color:#1ab5b8;">Jan Kalyan Hospital</strong> &nbsp;·&nbsp;
+    {LOCATION} &nbsp;·&nbsp;
+    Hospital Management System v2.0 &nbsp;·&nbsp;
+    © {datetime.date.today().year} All Rights Reserved
+</div>
+""", unsafe_allow_html=True)
