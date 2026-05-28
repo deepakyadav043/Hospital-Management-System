@@ -39,7 +39,7 @@ def add_doctor():
     exp = int(input("Experience (years):"))
     fee = int(input("fee:"))
     doc_id = len(doctor_list) + 1
-    d = Doctor("AIIMS","Delhi","jankaliyan@gmail.com",8989651456,doc_id,name,spec,exp,fee)
+    d = Doctor("JAN KALYAN HOSPITAL","BIHAR","jankalyan@gmail.com",8989651456,doc_id,name,spec,exp,fee)
     doctor_list.append(d)
     print("Doctor Added!")
 
@@ -108,7 +108,7 @@ def add_patient():
     disease = input("Disease: ")
     room   = input("Room Number: ")
     pat_id = len(patient_list) + 1
-    p = Patient("AIIMS", "Delhi","jankalyan@gmail.com",8989651456, pat_id, name, age, disease, room)
+    p = Patient("JAN KALYAN HOSPITAL", "BIHAR","jankalyan@gmail.com",8989651456, pat_id, name, age, disease, room)
     patient_list.append(p)
     print("✅ Patient Added!")
 
@@ -235,7 +235,7 @@ def generate_bill():
     room_ch = int(input("  Room Charges        : "))
     med_ch  = int(input("  Medicine Charges    : "))
     bill_id = len(bill_list) + 1
-    b = Bill("AIIMS", "Delhi","jankalyan@gmail.com",8789651456, bill_id, name, doc_fee, room_ch, med_ch)
+    b = Bill("JAN KALYAN HOSPITAL", "BIHAR","jankalyan@gmail.com",8789651456, bill_id, name, doc_fee, room_ch, med_ch)
     bill_list.append(b)
     b.display()
     print("✅ Bill Generated!")
@@ -316,7 +316,7 @@ def add_salary_record():
     year         = input("  Year  (e.g. 2025)  : ")
 
     sal_id = len(salary_list) + 1
-    s = Salary("AIIMS", "Delhi", "jankalyan@gmail.com", 8989651456,
+    s = Salary("JAN KALYAN HOSPITAL", "BIHAR", "jankalyan@gmail.com", 8989651456,
                sal_id, name, emp_type, basic, hra, da, pf, month, year)
     salary_list.append(s)
     s.display()
