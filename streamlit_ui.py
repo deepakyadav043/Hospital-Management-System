@@ -5,7 +5,7 @@ st.set_page_config(
     page_title="Jan Kalyan Hospital",
     page_icon="🏥",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # ─── Credentials (hidden in code, not shown in UI) ────────────────────────────
@@ -27,6 +27,32 @@ for key, val in {
 # ─── Global CSS ───────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
+          /* Sidebar Styling */
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0f172a 0%, #134e4a 100%);
+    border-right: 2px solid #14b8a6;
+}
+
+section[data-testid="stSidebar"] .css-1d391kg {
+    padding-top: 20px;
+}
+
+section[data-testid="stSidebar"] .stSelectbox label {
+    color: white !important;
+    font-weight: 600;
+}
+
+section[data-testid="stSidebar"] .stSelectbox div {
+    color: white;
+}
+
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3,
+section[data-testid="stSidebar"] p {
+    color: white !important;
+}
+              
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
 
 :root {
@@ -42,6 +68,9 @@ st.markdown("""
 }
 
 html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
+            .stApp {
+    background: linear-gradient(to bottom right, #020617, #0f172a);
+}
 
 /* Hide Streamlit chrome */
 #MainMenu, footer, header { visibility: hidden; }
@@ -90,14 +119,22 @@ html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
 /* Stat cards */
 .stats-row { display: flex; gap: 16px; margin-bottom: 2rem; flex-wrap: wrap; }
 .stat-card {
-  flex: 1; min-width: 150px;
+  flex: 1; 
+  min-width: 150px;
   background: white;
   border-radius: 16px;
   padding: 24px 20px;
   text-align: center;
   box-shadow: 0 4px 20px rgba(0,0,0,0.07);
   border-top: 4px solid var(--teal);
+  transition: 0.3s;
 }
+            
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(20,184,166,0.2);
+}
+            
 .stat-number { font-family:'Playfair Display',serif; font-size:2.4rem; font-weight:700; color:var(--teal); }
 .stat-label  { font-size:.85rem; color:var(--muted); margin-top:4px; }
 
@@ -179,6 +216,16 @@ html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
   font-weight: 600 !important;
   transition: all .2s !important;
 }
+            
+/* Better Form Inputs */
+.stTextInput input,
+.stNumberInput input,
+.stSelectbox div,
+.stDateInput input,
+.stTimeInput input {
+    border-radius: 10px !important;
+    border: 1px solid #14b8a6 !important;
+}
 
 /* Tags */
 .tag {
@@ -192,7 +239,10 @@ html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
 .data-table { width:100%; border-collapse:collapse; font-size:.9rem; }
 .data-table th { background:#0d9488; color:white; padding:10px 14px; text-align:left; }
 .data-table td { padding:9px 14px; border-bottom:1px solid #e2e8f0; }
-.data-table tr:hover td { background:#f0fdf4; }
+.data-table tr:hover td {
+    background:#ccfbf1;
+    transition: 0.3s;
+}
 
 /* Footer */
 .footer {
@@ -397,8 +447,9 @@ def dashboard_header(role):
       <span class="topnav-info">Bihar &nbsp;|&nbsp; jankalyan@gmail.com &nbsp;|&nbsp; +91 8989651456</span>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("🚪 Logout", type="secondary"):
-        logout(); st.rerun()
+    if st.sidebar.button("🚪 Logout", use_container_width=True):
+        logout()
+        st.rerun()
 
 # ── Doctor helpers ─────────────────────────────────────────────────────────────
 def ui_add_doctor():
@@ -647,39 +698,86 @@ def admin_dashboard():
     dashboard_header("admin")
     st.markdown('<div class="section-head">Admin Dashboard</div>', unsafe_allow_html=True)
 
-    # Quick stats
-    c1,c2,c3,c4 = st.columns(4)
-    c1.metric("👨‍⚕️ Doctors",      len(st.session_state.doctor_list))
-    c2.metric("🧑 Patients",      len(st.session_state.patient_list))
-    c3.metric("📅 Appointments",  len(st.session_state.appointment_list))
-    c4.metric("🧾 Bills",         len(st.session_state.bill_list))
+    st.markdown(f"""
+    <div class="stats-row">
 
-    menu = st.sidebar.selectbox("📌 Menu", [
-        "🏠 Home",
-        "── DOCTORS ──",
-        "➕ Add Doctor", "👁️ View Doctors", "🔍 Search Doctor", "🗑️ Delete Doctor",
-        "── PATIENTS ──",
-        "➕ Add Patient", "👁️ View Patients", "🔍 Search Patient",
-        "── APPOINTMENTS ──",
-        "📅 Book Appointment", "👁️ View Appointments", "🔍 Search Appointment",
-        "── BILLING ──",
-        "🧾 Generate Bill", "👁️ View Bills",
-        "── SALARY ──",
-        "💵 Add Salary", "👁️ View Salaries", "🔍 Search Salary",
-        "🧮 Salary Calculator", "🗑️ Delete Salary",
-    ])
+    <div class="stat-card">
+    <div class="stat-number">{len(st.session_state.doctor_list)}</div>
+    <div class="stat-label">Doctors</div>
+    </div>
 
+    <div class="stat-card">
+    <div class="stat-number">{len(st.session_state.patient_list)}</div>
+    <div class="stat-label">Patients</div>
+    </div>
+
+    <div class="stat-card">
+    <div class="stat-number">{len(st.session_state.appointment_list)}</div>
+    <div class="stat-label">Appointments</div>
+    </div>
+
+    <div class="stat-card">
+    <div class="stat-number">{len(st.session_state.bill_list)}</div>
+    <div class="stat-label">Bills</div>
+    </div>
+
+    </div>
+    """, unsafe_allow_html=True)
+
+
+
+    st.sidebar.markdown("## 🏥 Navigation")
+
+    menu = st.sidebar.radio(
+        "Select Option",
+        [
+            "🏠 Home",
+
+            "👨‍⚕️ Add Doctor",
+            "👨‍⚕️ View Doctors",
+            "🔍 Search Doctor",
+            "🗑️ Delete Doctor",
+
+            "🧑 Add Patient",
+            "🧑 View Patients",
+            "🔍 Search Patient",
+
+            "📅 Book Appointment",
+            "📋 View Appointments",
+            "🔍 Search Appointment",
+
+            "🧾 Generate Bill",
+            "💰 View Bills",
+
+            "💵 Add Salary",
+            "📋 View Salaries",
+            "🔍 Search Salary",
+            "🧮 Salary Calculator",
+            "🗑️ Delete Salary",
+        ]
+    )
+    
     dispatch = {
-        "➕ Add Doctor": ui_add_doctor, "👁️ View Doctors": ui_view_doctors,
-        "🔍 Search Doctor": ui_search_doctor, "🗑️ Delete Doctor": ui_delete_doctor,
-        "➕ Add Patient": ui_add_patient, "👁️ View Patients": ui_view_patients,
+        "👨‍⚕️ Add Doctor": ui_add_doctor,
+        "👨‍⚕️ View Doctors": ui_view_doctors,
+        "🔍 Search Doctor": ui_search_doctor,
+        "🗑️ Delete Doctor": ui_delete_doctor,
+
+        "🧑 Add Patient": ui_add_patient,
+        "🧑 View Patients": ui_view_patients,
         "🔍 Search Patient": ui_search_patient,
+
         "📅 Book Appointment": ui_book_appointment,
-        "👁️ View Appointments": ui_view_appointments,
+        "📋 View Appointments": ui_view_appointments,
         "🔍 Search Appointment": ui_search_appointment,
-        "🧾 Generate Bill": ui_generate_bill, "👁️ View Bills": ui_view_bills,
-        "💵 Add Salary": ui_add_salary, "👁️ View Salaries": ui_view_salaries,
+
+        "🧾 Generate Bill": ui_generate_bill,
+        "💰 View Bills": ui_view_bills,
+
+        "💵 Add Salary": ui_add_salary,
+        "📋 View Salaries": ui_view_salaries,
         "🔍 Search Salary": ui_search_salary,
+
         "🧮 Salary Calculator": ui_salary_calculator,
         "🗑️ Delete Salary": ui_delete_salary,
     }
@@ -691,32 +789,141 @@ def admin_dashboard():
           <p>Use the sidebar to manage doctors, patients, appointments, bills, and salary records.</p>
         </div>
         """, unsafe_allow_html=True)
+        st.subheader("⚡ Quick Actions")
+
+        c1, c2, c3 = st.columns(3)
+
+        with c1:
+            if st.button("➕ Add Doctor", use_container_width=True):
+                ui_add_doctor()
+
+        with c2:
+            if st.button("➕ Add Patient", use_container_width=True):
+                ui_add_patient()
+
+        with c3:
+            if st.button("📅 Book Appointment", use_container_width=True):
+                ui_book_appointment()
+
     elif menu in dispatch:
         dispatch[menu]()
 
 
 def doctor_dashboard():
     dashboard_header("doctor")
-    menu = st.sidebar.selectbox("📌 Menu", ["👁️ View Patients", "🔍 Search Patient", "📅 View Appointments"])
+    st.sidebar.markdown("""
+    <h2 style='text-align:center;color:white;'>👨‍⚕️ Doctor Panel</h2>
+    <hr>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="dash-card">
+    <h4>👨‍⚕️ Doctor Panel</h4>
+    <p>Manage patients, appointments, and medical records efficiently.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div class="stats-row">
+
+    <div class="stat-card">
+    <div class="stat-number">{len(st.session_state.patient_list)}</div>
+    <div class="stat-label">Patients</div>
+    </div>
+
+    <div class="stat-card">
+    <div class="stat-number">{len(st.session_state.appointment_list)}</div>
+    <div class="stat-label">Appointments</div>
+    </div>
+
+    <div class="stat-card">
+    <div class="stat-number">{len(st.session_state.doctor_list)}</div>
+    <div class="stat-label">Doctors</div>
+    </div>
+
+    </div>
+    """, unsafe_allow_html=True)
+
+
+
+
+    menu = st.sidebar.selectbox("📌 Menu", [
+    "🏠 Dashboard",
+    "👁️ View Patients",
+    "🔍 Search Patient",
+    "📅 View Appointments",
+    "👨‍⚕️ View Doctors"
+])
     dispatch = {
+        "👨‍⚕️ View Doctors": ui_view_doctors,
         "👁️ View Patients": ui_view_patients,
         "🔍 Search Patient": ui_search_patient,
         "📅 View Appointments": ui_view_appointments,
     }
-    dispatch[menu]()
+    if menu == "🏠 Dashboard":
+        st.info("Welcome Doctor 👨‍⚕️")
+    else:
+        dispatch[menu]()
 
 
 def reception_dashboard():
     dashboard_header("reception")
-    menu = st.sidebar.selectbox("📌 Menu", ["➕ Add Patient", "👁️ View Patients", "📅 Book Appointment", "🧾 Generate Bill"])
+
+    st.sidebar.markdown("""
+    <h2 style='text-align:center;color:white;'>🗂️ Reception Panel</h2>
+    <hr>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="dash-card">
+    <h4>🗂️ Reception Dashboard</h4>
+    <p>Manage patient entry, appointments and billing.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div class="stats-row">
+
+    <div class="stat-card">
+    <div class="stat-number">{len(st.session_state.patient_list)}</div>
+    <div class="stat-label">Patients</div>
+    </div>
+
+    <div class="stat-card">
+    <div class="stat-number">{len(st.session_state.appointment_list)}</div>
+    <div class="stat-label">Appointments</div>
+    </div>
+
+    <div class="stat-card">
+    <div class="stat-number">{len(st.session_state.bill_list)}</div>
+    <div class="stat-label">Bills</div>
+    </div>
+
+    </div>
+    """, unsafe_allow_html=True)
+
+    menu = st.sidebar.selectbox(
+        "📌 Menu",
+        [
+            "🏠 Dashboard",
+            "➕ Add Patient",
+            "👁️ View Patients",
+            "📅 Book Appointment",
+            "🧾 Generate Bill"
+        ]
+    )
+
     dispatch = {
         "➕ Add Patient": ui_add_patient,
         "👁️ View Patients": ui_view_patients,
         "📅 Book Appointment": ui_book_appointment,
         "🧾 Generate Bill": ui_generate_bill,
     }
-    dispatch[menu]()
 
+    if menu == "🏠 Dashboard":
+        st.info("Welcome Receptionist 🗂️")
+    else:
+        dispatch[menu]()
 # ══════════════════════════════════════════════════════════════════════════════
 #  MAIN ROUTER
 # ══════════════════════════════════════════════════════════════════════════════
