@@ -372,11 +372,32 @@ def show_landing():
         if st.button("🔐 Staff Login", type="primary", use_container_width=True):
             st.session_state.show_login = True; st.rerun()
 
+    
+        st.image(
+        "expertise-healthcare-banner(2).jpg",
+        use_container_width=True
+    )
+
+    st.markdown("""
+    <div style="
+    background:rgba(15,23,42,.9);
+    padding:30px;
+    border-radius:16px;
+    margin-top:-70px;
+    position:relative;
+    z-index:100;
+    ">
+    <h1 style="color:white;">
+    Healing With Heart, Serving With Care
+    </h1>
+    <p style="color:#a7f3d0;">
+    Your health is our mission — advanced care, compassionate touch.
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
+        
     st.markdown("""
     <div class="hero">
-      <img class="hero-img"
-           src="https://imkarchitects.com/images/expertise-healthcare-banner.jpg"
-           alt="Hospital" onerror="this.style.display='none'">
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <h1>Healing With Heart,<br>Serving With Care</h1>
