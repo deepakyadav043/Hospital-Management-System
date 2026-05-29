@@ -1,3 +1,6 @@
+import json
+import os
+
 import streamlit as st
 
 st.set_page_config(
@@ -11,11 +14,25 @@ CREDENTIALS = {
     "admin":     {"password": "admin@234",   "role": "admin"},
     "doctor":    {"password": "doctor@459",  "role": "doctor"},
     "reception": {"password": "recep@389",   "role": "reception"},
+
+
 }
+
+DATA_FILE = "doctors.json"
+
+def load_doctors():
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as f:
+            return json.load(f)
+    return []
+
+def save_doctors():
+    with open(DATA_FILE, "w") as f:
+        json.dump(st.session_state.doctor_list, f)
 
 defaults = {
     "logged_in": False, "role": None, "show_login": False,
-    "doctor_list": [], "patient_list": [], "appointment_list": [],
+    "doctor_list": load_doctors(), "patient_list": [], "appointment_list": [],
     "bill_list": [], "salary_list": [],
     "admin_page":     "🏠 Home",
     "doctor_page":    "🏠 Dashboard",
@@ -701,6 +718,7 @@ def ui_add_doctor():
         if st.form_submit_button("Add Doctor",type="primary"):
             if n and s:
                 st.session_state.doctor_list.append({"id":next_id(st.session_state.doctor_list),"name":n,"spec":s,"exp":e,"fee":f})
+                save_doctors()
                 st.success(f"✅ Dr. {n} added!")
             else: st.warning("Fill all fields.")
 
