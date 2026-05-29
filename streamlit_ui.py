@@ -236,7 +236,7 @@ border:1px solid #14b8a6 !important;
 }
 
 div[data-baseweb="select"]{
-            border-radius:10px !important;
+    border-radius:10px !important;
 }
 
 /* ── Footer ── */
