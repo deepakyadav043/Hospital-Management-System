@@ -932,15 +932,81 @@ def ui_delete_salary():
         save_salaries()
         st.success("Deleted."); st.rerun()
 
+
+def ui_delete_patient():
+    st.subheader("🗑️ Delete Patient")
+
+    if not st.session_state.patient_list:
+        st.info("No patients to delete.")
+        return
+
+    opts = {f"#{p['id']} — {p['name']}": p['id']
+            for p in st.session_state.patient_list}
+
+    sel = st.selectbox("Select Patient", list(opts.keys()))
+
+    if st.button("Delete Patient", type="primary"):
+        st.session_state.patient_list = [
+            p for p in st.session_state.patient_list
+            if p['id'] != opts[sel]
+        ]
+        save_patients()
+        st.success("Patient deleted successfully.")
+        st.rerun()
+
+
+def ui_delete_appointment():
+    st.subheader("🗑️ Delete Appointment")
+
+    if not st.session_state.appointment_list:
+        st.info("No appointments to delete.")
+        return
+
+    opts = {f"#{a['id']} — {a['patient']}": a['id']
+            for a in st.session_state.appointment_list}
+
+    sel = st.selectbox("Select Appointment", list(opts.keys()))
+
+    if st.button("Delete Appointment", type="primary"):
+        st.session_state.appointment_list = [
+            a for a in st.session_state.appointment_list
+            if a['id'] != opts[sel]
+        ]
+        save_appointments()
+        st.success("Appointment deleted successfully.")
+        st.rerun()
+
+
+def ui_delete_bill():
+    st.subheader("🗑️ Delete Bill")
+
+    if not st.session_state.bill_list:
+        st.info("No bills to delete.")
+        return
+
+    opts = {f"#{b['id']} — {b['name']}": b['id']
+            for b in st.session_state.bill_list}
+
+    sel = st.selectbox("Select Bill", list(opts.keys()))
+
+    if st.button("Delete Bill", type="primary"):
+        st.session_state.bill_list = [
+            b for b in st.session_state.bill_list
+            if b['id'] != opts[sel]
+        ]
+        save_bills()
+        st.success("Bill deleted successfully.")
+        st.rerun()
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  DASHBOARDS
 # ══════════════════════════════════════════════════════════════════════════════
 ADMIN_SECTIONS = [
     ("Overview",      ["🏠 Home"]),
     ("Doctors",       ["➕ Add Doctor","👁️ View Doctors","🔍 Search Doctor","🗑️ Delete Doctor"]),
-    ("Patients",      ["➕ Add Patient","👁️ View Patients","🔍 Search Patient"]),
-    ("Appointments",  ["📅 Book Appointment","📋 View Appointments","📆 Search by Date"]),
-    ("Billing",       ["🧾 Generate Bill","💰 View Bills"]),
+    ("Patients",      ["➕ Add Patient","👁️ View Patients","🔍 Search Patient","🗑️ Delete Patient"]),
+    ("Appointments",  ["📅 Book Appointment","📋 View Appointments","📆 Search by Date","🗑️ Delete Appointment"]),
+    ("Billing",       ["🧾 Generate Bill","💰 View Bills","🗑️ Delete Bill"]),
     ("Salary",        ["💵 Add Salary","📑 View Salaries","🔎 Search Salary","🧮 Salary Calculator","🗑️ Delete Salary"]),
 ]
 ADMIN_DISPATCH = {
@@ -948,9 +1014,13 @@ ADMIN_DISPATCH = {
     "🔍 Search Doctor":ui_search_doctor,"🗑️ Delete Doctor":ui_delete_doctor,
     "➕ Add Patient":ui_add_patient,"👁️ View Patients":ui_view_patients,
     "🔍 Search Patient":ui_search_patient,
+    "🗑️ Delete Patient":ui_delete_patient,
     "📅 Book Appointment":ui_book_appointment,"📋 View Appointments":ui_view_appointments,
     "📆 Search by Date":ui_search_appointment,
-    "🧾 Generate Bill":ui_generate_bill,"💰 View Bills":ui_view_bills,
+    "🗑️ Delete Appointment":ui_delete_appointment,
+    "🧾 Generate Bill":ui_generate_bill,
+    "💰 View Bills":ui_view_bills,
+    "🗑️ Delete Bill":ui_delete_bill,
     "💵 Add Salary":ui_add_salary,"📑 View Salaries":ui_view_salaries,
     "🔎 Search Salary":ui_search_salary,"🧮 Salary Calculator":ui_salary_calculator,
     "🗑️ Delete Salary":ui_delete_salary,
@@ -968,15 +1038,16 @@ DOCTOR_DISPATCH = {
 }
 RECEPTION_SECTIONS = [
     ("Overview",     ["🏠 Dashboard"]),
-    ("Patients",     ["➕ Add Patient","👁️ View Patients","🔍 Search Patient"]),
-    ("Appointments", ["📅 Book Appointment","📋 View Appointments"]),
-    ("Billing",      ["🧾 Generate Bill","💰 View Bills"]),
+    ("Patients",     ["➕ Add Patient","👁️ View Patients","🔍 Search Patient","🗑️ Delete Patient"]),
+    ("Appointments", ["📅 Book Appointment","📋 View Appointments","📆 Search by Date","🗑️ Delete Appointment"]),
+    ("Billing",      ["🧾 Generate Bill","💰 View Bills","🗑️ Delete Bill"]),
+
 ]
 RECEPTION_DISPATCH = {
     "➕ Add Patient":ui_add_patient,"👁️ View Patients":ui_view_patients,
-    "🔍 Search Patient":ui_search_patient,
-    "📅 Book Appointment":ui_book_appointment,"📋 View Appointments":ui_view_appointments,
-    "🧾 Generate Bill":ui_generate_bill,"💰 View Bills":ui_view_bills,
+    "🔍 Search Patient":ui_search_patient,"🗑️ Delete Patient":ui_delete_patient,
+    "📅 Book Appointment":ui_book_appointment,"📋 View Appointments":ui_view_appointments,"🗑️ Delete Appointment":ui_delete_appointment,
+    "🧾 Generate Bill":ui_generate_bill,"💰 View Bills":ui_view_bills,"🗑️ Delete Bill":ui_delete_bill,
 }
 
 def render_dashboard(role, page_key, sections, dispatch, stats_html, welcome_msg):
