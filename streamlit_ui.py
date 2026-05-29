@@ -35,7 +35,9 @@ st.markdown("""
 }
 html,body,[class*="css"]{ font-family:'DM Sans',sans-serif; }
 .stApp{ background:linear-gradient(to bottom right,#020617,#0f172a); }
-#MainMenu,footer,header{ visibility:hidden; }
+#MainMenu,footer {
+#  visibility:hidden;
+#  }
 .block-container{ padding-top:1rem !important; }
 
 /* ── Sidebar ── */
