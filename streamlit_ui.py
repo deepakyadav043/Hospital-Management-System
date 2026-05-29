@@ -262,6 +262,24 @@ div[data-baseweb="select"] span{
 /* Remove radio circles globally in sidebar */
 [data-testid="stSidebar"] input[type="radio"]{ display:none !important; }
 [data-testid="stSidebar"] .st-emotion-cache-j7qwjs{ display:none !important; }
+            
+
+/* Force remove ALL focus rings everywhere */
+*:focus, *:focus-visible, *:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+}
+[data-baseweb="select"] > div:focus,
+[data-baseweb="select"] > div:focus-within,
+[data-baseweb="select"] > div {
+  outline: none !important;
+  box-shadow: none !important;
+  border: 1px solid #14b8a6 !important;
+}
+input:focus, textarea:focus, [tabindex]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
