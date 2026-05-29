@@ -255,10 +255,6 @@ def set_page(state_key, value):
 #  SIDEBAR BUILDER  — uses buttons only, no radio, no selectbox
 # ══════════════════════════════════════════════════════════════════════════════
 def build_sidebar(role, page_key, sections):
-    """
-    sections: list of (section_title, [page_label, ...])
-    Renders pure buttons — no radio circles. Active page gets 'primary' style.
-    """
     labels_map = {"admin":"🛡️ Admin","doctor":"👨‍⚕️ Doctor","reception":"🗂️ Receptionist"}
     with st.sidebar:
         st.markdown(f"""
@@ -279,14 +275,15 @@ def build_sidebar(role, page_key, sections):
             st.markdown(f'<span class="sb-section-label">{section_title}</span>', unsafe_allow_html=True)
             for page in pages:
                 is_active = (current == page)
-                # Use on_click + args so the button click updates state AND reruns
-                st.button(
+                clicked = st.button(
                     page,
                     key=f"nav__{page_key}__{page}",
                     type="primary" if is_active else "secondary",
                     use_container_width=True,
-                    on_click=lambda p=page, k=page_key: st.session_state.update({k: p}),
                 )
+                if clicked:
+                    st.session_state[page_key] = page
+                    st.rerun()
 
         st.markdown('<hr style="border-color:rgba(239,68,68,0.25);margin:10px 0 6px;">', unsafe_allow_html=True)
         with st.container():
