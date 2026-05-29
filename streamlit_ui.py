@@ -234,11 +234,10 @@ section[data-testid="stSidebar"] .stButton>button[kind="primary"]{
   border-radius:10px !important; 
 border:1px solid #14b8a6 !important;
 }
-
-div[data-baseweb="select"]{
-    border-radius:10px !important;
+div[data-baseweb="select"] span{
+    border:none !important;
+    background:transparent !important;
 }
-
 /* ── Footer ── */
 .footer{
   background:var(--navy); color:#94a3b8; border-radius:14px;
