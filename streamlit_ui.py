@@ -251,7 +251,7 @@ div[data-baseweb="select"] span{
   border-color: #14b8a6 !important;
 }
             
-}
+
 /* ── Footer ── */
 .footer{
   background:var(--navy); color:#94a3b8; border-radius:14px;
