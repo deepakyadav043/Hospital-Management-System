@@ -542,6 +542,50 @@ def show_landing():
             st.session_state.show_login = True; st.rerun()
 
     st.markdown("""
+    <div style="
+    background:rgba(15,23,42,0.9);
+    border:1px solid rgba(20,184,166,0.3);
+    border-radius:18px;
+    padding:20px;
+    margin-top:15px;
+    margin-bottom:20px;
+    color:white;
+    box-shadow:0 10px 30px rgba(0,0,0,0.3);
+    ">
+
+    <h3 style="color:#99f6e4;">🔐 Demo Login Credentials</h3>
+
+    <table style="width:100%;color:white;">
+    <tr>
+    <th align="left">Role</th>
+    <th align="left">Username</th>
+    <th align="left">Password</th>
+    </tr>
+
+    <tr>
+    <td>🛡️ Admin</td>
+    <td>admin</td>
+    <td>admin@234</td>
+    </tr>
+
+    <tr>
+    <td>👨‍⚕️ Doctor</td>
+    <td>doctor</td>
+    <td>doctor@459</td>
+    </tr>
+
+    <tr>
+    <td>🗂️ Receptionist</td>
+    <td>reception</td>
+    <td>recep@389</td>
+    </tr>
+
+    </table>
+
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
     <div class="hero">
       <img class="hero-img"
            src="https://imkarchitects.com/images/expertise-healthcare-banner.jpg"
