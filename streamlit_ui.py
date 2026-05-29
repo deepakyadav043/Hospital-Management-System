@@ -232,11 +232,25 @@ section[data-testid="stSidebar"] .stButton>button[kind="primary"]{
 .stDateInput input,
 .stTimeInput input{
   border-radius:10px !important; 
-border:1px solid #14b8a6 !important;
+  border:1px solid #14b8a6 !important;
 }
 div[data-baseweb="select"] span{
     border:none !important;
     background:transparent !important;
+}
+
+/* ── Remove focus outline/ring ── */
+*:focus { 
+  outline: none !important; 
+  box-shadow: none !important; 
+}
+[data-baseweb="select"]:focus-within,
+[data-baseweb="select"] *:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: #14b8a6 !important;
+}
+            
 }
 /* ── Footer ── */
 .footer{
