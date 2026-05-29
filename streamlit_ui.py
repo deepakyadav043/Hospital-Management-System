@@ -234,10 +234,9 @@ section[data-testid="stSidebar"] .stButton>button[kind="primary"]{
   border-radius:10px !important; 
 border:1px solid #14b8a6 !important;
 }
-div[data-baseweb="tag"]{
-    background:transparent !important;
-    border:none !important;
-    box-shadow:none !important;
+
+div[data-baseweb="select"]{
+            border-radius:10px !important;
 }
 
 /* ── Footer ── */
