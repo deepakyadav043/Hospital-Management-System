@@ -30,10 +30,51 @@ def save_doctors():
     with open(DATA_FILE, "w") as f:
         json.dump(st.session_state.doctor_list, f)
 
+
+def save_patients():
+    with open("patients.json", "w") as f:
+        json.dump(st.session_state.patient_list, f)
+
+def load_patients():
+    if os.path.exists("patients.json"):
+        with open("patients.json", "r") as f:
+            return json.load(f)
+    return []
+
+def save_appointments():
+    with open("appointments.json", "w") as f:
+        json.dump(st.session_state.appointment_list, f)
+
+def load_appointments():
+    if os.path.exists("appointments.json"):
+        with open("appointments.json", "r") as f:
+            return json.load(f)
+    return []
+
+def save_bills():
+    with open("bills.json", "w") as f:
+        json.dump(st.session_state.bill_list, f)
+
+def load_bills():
+    if os.path.exists("bills.json"):
+        with open("bills.json", "r") as f:
+            return json.load(f)
+    return []
+
+def save_salaries():
+    with open("salaries.json", "w") as f:
+        json.dump(st.session_state.salary_list, f)
+
+def load_salaries():
+    if os.path.exists("salaries.json"):
+        with open("salaries.json", "r") as f:
+            return json.load(f)
+    return []
+
 defaults = {
     "logged_in": False, "role": None, "show_login": False,
-    "doctor_list": load_doctors(), "patient_list": [], "appointment_list": [],
-    "bill_list": [], "salary_list": [],
+    "doctor_list": load_doctors(), "patient_list": load_patients(), "appointment_list": load_appointments(),
+    "bill_list": load_bills(), "salary_list": load_salaries(),
     "admin_page":     "🏠 Home",
     "doctor_page":    "🏠 Dashboard",
     "reception_page": "🏠 Dashboard",
@@ -745,6 +786,8 @@ def ui_delete_doctor():
     sel=st.selectbox("Select Doctor",list(opts.keys()))
     if st.button("Delete Doctor",type="primary"):
         st.session_state.doctor_list=[d for d in st.session_state.doctor_list if d['id']!=opts[sel]]
+
+        save_doctors()
         st.success("Doctor removed."); st.rerun()
 
 def ui_add_patient():
@@ -755,6 +798,7 @@ def ui_add_patient():
         if st.form_submit_button("Add Patient",type="primary"):
             if n and d:
                 st.session_state.patient_list.append({"id":next_id(st.session_state.patient_list),"name":n,"age":a,"disease":d,"room":r})
+                save_patients()
                 st.success(f"✅ {n} added!")
             else: st.warning("Fill required fields.")
 
@@ -787,6 +831,7 @@ def ui_book_appointment():
         if st.form_submit_button("Book Appointment",type="primary"):
             if doc and pat:
                 st.session_state.appointment_list.append({"id":next_id(st.session_state.appointment_list),"doctor":doc,"patient":pat,"date":str(date),"time":str(time)})
+                save_appointments()
                 st.success("✅ Appointment booked!")
             else: st.warning("Fill all fields.")
 
@@ -817,6 +862,7 @@ def ui_generate_bill():
                 total=doc_f+room+med
                 b={"id":next_id(st.session_state.bill_list),"name":name,"doc_fee":doc_f,"room":room,"med":med,"total":total}
                 st.session_state.bill_list.append(b)
+                save_bills()
                 st.markdown(f'<div class="slip-box"><h3>🧾 Bill #{b["id"]}</h3><p>Patient: <b>{name}</b><br>Doctor Fee: ₹{doc_f} | Room: ₹{room} | Medicine: ₹{med}<br><span style="font-size:1.3rem;font-weight:700;color:#14b8a6;">Total: ₹{total:,}</span></p></div>',unsafe_allow_html=True)
             else: st.warning("Enter patient name.")
 
@@ -843,6 +889,7 @@ def ui_add_salary():
                 gross=basic+hra_a+da_a; net=gross-pf_a
                 s={"id":next_id(st.session_state.salary_list),"name":emp,"type":etype,"basic":basic,"hra":hra_a,"da":da_a,"pf":pf_a,"gross":gross,"net":net,"month":month,"year":year}
                 st.session_state.salary_list.append(s)
+                save_salaries()
                 st.markdown(f'<div class="slip-box"><h3>💵 Salary Slip — {emp}</h3><p>Type:{etype} | Month:{month} {year}<br>Basic:₹{basic:,} | HRA:₹{hra_a:,.0f} | DA:₹{da_a:,.0f}<br>Gross:₹{gross:,.0f} | PF Deduction:₹{pf_a:,.0f}<br><span style="font-size:1.3rem;font-weight:700;color:#14b8a6;">Net Salary: ₹{net:,.0f}</span></p></div>',unsafe_allow_html=True)
 
 def ui_view_salaries():
@@ -882,6 +929,7 @@ def ui_delete_salary():
     sel=st.selectbox("Select Record",list(opts.keys()))
     if st.button("Delete Record",type="primary"):
         st.session_state.salary_list=[s for s in st.session_state.salary_list if s['id']!=opts[sel]]
+        save_salaries()
         st.success("Deleted."); st.rerun()
 
 # ══════════════════════════════════════════════════════════════════════════════
