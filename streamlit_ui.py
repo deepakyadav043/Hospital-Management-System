@@ -226,9 +226,18 @@ section[data-testid="stSidebar"] .stButton>button[kind="primary"]{
 .stButton>button{
   border-radius:10px !important; font-weight:600 !important; transition:all .2s !important;
 }
-.stTextInput input,.stNumberInput input,.stSelectbox div,
-.stDateInput input,.stTimeInput input{
-  border-radius:10px !important; border:1px solid #14b8a6 !important;
+.stTextInput input,
+.stNumberInput input,
+.stSelectbox div,
+.stDateInput input,
+.stTimeInput input{
+  border-radius:10px !important; 
+border:1px solid #14b8a6 !important;
+}
+div[data-baseweb="tag"]{
+    background:transparent !important;
+    border:none !important;
+    box-shadow:none !important;
 }
 
 /* ── Footer ── */
