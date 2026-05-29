@@ -25,7 +25,6 @@ for k, v in defaults.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
-# ─── CSS ──────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -35,12 +34,8 @@ st.markdown("""
 }
 html,body,[class*="css"]{ font-family:'DM Sans',sans-serif; }
 .stApp{ background:linear-gradient(to bottom right,#020617,#0f172a); }
-#MainMenu,footer {
-#  visibility:hidden;
-#  }
-.block-container{ 
-    padding-top:2rem !important; 
-}
+#MainMenu,footer { visibility:hidden; }
+.block-container{ padding-top:2rem !important; }
 
 /* ── Sidebar ── */
 section[data-testid="stSidebar"]{
@@ -48,11 +43,7 @@ section[data-testid="stSidebar"]{
   border-right:2px solid #14b8a6;
 }
 section[data-testid="stSidebar"] *{ color:white !important; }
-
-/* Remove ALL radio circles */
 section[data-testid="stSidebar"] [data-testid="stRadio"] { display:none !important; }
-
-/* Sidebar nav buttons */
 section[data-testid="stSidebar"] .stButton>button{
   background:transparent !important;
   border:none !important;
@@ -65,20 +56,20 @@ section[data-testid="stSidebar"] .stButton>button{
   font-weight:500 !important;
   transition:all 0.2s !important;
   justify-content:flex-start !important;
+  outline:none !important;
+  box-shadow:none !important;
 }
 section[data-testid="stSidebar"] .stButton>button:hover{
   background:rgba(20,184,166,0.2) !important;
   color:#ffffff !important;
   transform:translateX(4px) !important;
 }
-/* Active page button */
 section[data-testid="stSidebar"] .stButton>button[kind="primary"]{
   background:rgba(20,184,166,0.25) !important;
   border-left:3px solid #14b8a6 !important;
   color:#ffffff !important;
   font-weight:600 !important;
 }
-/* Logout button */
 .logout-btn>button{
   background:rgba(239,68,68,0.15) !important;
   border:1px solid rgba(239,68,68,0.4) !important;
@@ -101,9 +92,7 @@ section[data-testid="stSidebar"] .stButton>button[kind="primary"]{
 /* ── Top Nav ── */
 .topnav{
   background:linear-gradient(90deg,#0f172a,#134e4a);
-  border-radius:14px; 
-  padding:18px 28px;
-  margin-top:15px;
+  border-radius:14px; padding:18px 28px; margin-top:15px;
   display:flex; align-items:center; justify-content:space-between;
   margin-bottom:1.5rem; color:white;
   border:1px solid rgba(20,184,166,0.3);
@@ -117,17 +106,12 @@ section[data-testid="stSidebar"] .stButton>button[kind="primary"]{
   margin-bottom:2rem; min-height:340px;
   display:flex; align-items:flex-end;
 }
-.hero-img{
-  position:absolute; top:0; left:0; width:100%; height:100%;
-  object-fit:cover; object-position:center;
-}
+.hero-img{ position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; object-position:center; }
 .hero-overlay{
   position:absolute; top:0; left:0; width:100%; height:100%;
   background:linear-gradient(90deg,rgba(15,23,42,0.88) 0%,rgba(19,78,74,0.75) 50%,rgba(13,148,136,0.4) 100%);
 }
-.hero-content{
-  position:relative; z-index:2; padding:56px 60px; width:100%;
-}
+.hero-content{ position:relative; z-index:2; padding:56px 60px; width:100%; }
 .hero h1{
   font-family:'Playfair Display',serif; font-size:3.2rem; font-weight:900;
   line-height:1.1; margin:0 0 0.5rem;
@@ -142,7 +126,7 @@ section[data-testid="stSidebar"] .stButton>button[kind="primary"]{
   backdrop-filter:blur(4px);
 }
 
-/* ── Stats row ── */
+/* ── Stats ── */
 .stats-row{ display:flex; gap:14px; margin-bottom:2rem; flex-wrap:wrap; }
 .stat-card{
   flex:1; min-width:140px; background:white; border-radius:16px;
@@ -154,7 +138,6 @@ section[data-testid="stSidebar"] .stButton>button[kind="primary"]{
 .stat-number{ font-family:'Playfair Display',serif; font-size:2.2rem; font-weight:700; color:var(--teal); }
 .stat-label { font-size:.82rem; color:var(--muted); margin-top:4px; }
 
-/* ── Dashboard stat cards (dark) ── */
 .dstat-row{ display:flex; gap:14px; margin-bottom:2rem; flex-wrap:wrap; }
 .dstat-card{
   flex:1; min-width:140px;
@@ -225,32 +208,54 @@ section[data-testid="stSidebar"] .stButton>button[kind="primary"]{
 /* ── Global buttons ── */
 .stButton>button{
   border-radius:10px !important; font-weight:600 !important; transition:all .2s !important;
+  outline:none !important; box-shadow:none !important;
 }
-.stTextInput input,
-.stNumberInput input,
-.stSelectbox div,
-.stDateInput input,
-.stTimeInput input{
-  border-radius:10px !important; 
-  border:1px solid #14b8a6 !important;
-}
-div[data-baseweb="select"] span{
-    border:none !important;
-    background:transparent !important;
+.stButton>button:focus, .stButton>button:focus-visible {
+  outline:none !important; box-shadow:none !important;
 }
 
-/* ── Remove focus outline/ring ── */
-*:focus { 
-  outline: none !important; 
-  box-shadow: none !important; 
+/* ── Inputs ── */
+.stTextInput input,
+.stNumberInput input,
+.stDateInput input,
+.stTimeInput input {
+  border-radius:10px !important;
+  border:1px solid #14b8a6 !important;
+  outline:none !important;
+  box-shadow:none !important;
 }
-[data-baseweb="select"]:focus-within,
-[data-baseweb="select"] *:focus {
-  outline: none !important;
-  box-shadow: none !important;
-  border-color: #14b8a6 !important;
+.stTextInput input:focus,
+.stNumberInput input:focus,
+.stDateInput input:focus,
+.stTimeInput input:focus {
+  outline:none !important;
+  box-shadow:none !important;
+  border:1px solid #14b8a6 !important;
 }
-            
+
+/* ── Selectbox — remove ALL rings ── */
+div[data-baseweb="select"] { outline:none !important; box-shadow:none !important; }
+div[data-baseweb="select"] > div {
+  border-radius:10px !important;
+  border:1px solid #14b8a6 !important;
+  outline:none !important;
+  box-shadow:none !important;
+}
+div[data-baseweb="select"] > div:focus,
+div[data-baseweb="select"] > div:focus-within,
+div[data-baseweb="select"] > div:focus-visible {
+  outline:none !important;
+  box-shadow:none !important;
+  border:1px solid #14b8a6 !important;
+}
+div[data-baseweb="select"] span { border:none !important; background:transparent !important; }
+[data-baseweb="popover"] { outline:none !important; box-shadow:none !important; }
+
+/* ── Universal focus reset ── */
+*, *:focus, *:focus-visible, *:focus-within {
+  outline:none !important;
+  box-shadow:none !important;
+}
 
 /* ── Footer ── */
 .footer{
@@ -259,27 +264,8 @@ div[data-baseweb="select"] span{
 }
 .footer span{ color:#99f6e4; }
 
-/* Remove radio circles globally in sidebar */
 [data-testid="stSidebar"] input[type="radio"]{ display:none !important; }
 [data-testid="stSidebar"] .st-emotion-cache-j7qwjs{ display:none !important; }
-            
-
-/* Force remove ALL focus rings everywhere */
-*:focus, *:focus-visible, *:focus-within {
-  outline: none !important;
-  box-shadow: none !important;
-}
-[data-baseweb="select"] > div:focus,
-[data-baseweb="select"] > div:focus-within,
-[data-baseweb="select"] > div {
-  outline: none !important;
-  box-shadow: none !important;
-  border: 1px solid #14b8a6 !important;
-}
-input:focus, textarea:focus, [tabindex]:focus {
-  outline: none !important;
-  box-shadow: none !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -297,7 +283,7 @@ def set_page(state_key, value):
     st.rerun()
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  SIDEBAR BUILDER  — uses buttons only, no radio, no selectbox
+#  SIDEBAR
 # ══════════════════════════════════════════════════════════════════════════════
 def build_sidebar(role, page_key, sections):
     labels_map = {"admin":"🛡️ Admin","doctor":"👨‍⚕️ Doctor","reception":"🗂️ Receptionist"}
@@ -386,7 +372,6 @@ def show_landing():
         if st.button("🔐 Staff Login", type="primary", use_container_width=True):
             st.session_state.show_login = True; st.rerun()
 
-    # Hero with real hospital image
     st.markdown("""
     <div class="hero">
       <img class="hero-img"
@@ -494,7 +479,6 @@ def dashboard_header(role):
 # ══════════════════════════════════════════════════════════════════════════════
 #  FEATURE UIs
 # ══════════════════════════════════════════════════════════════════════════════
-
 def ui_add_doctor():
     st.subheader("➕ Add Doctor")
     with st.form("add_doc"):
@@ -672,7 +656,6 @@ def ui_delete_salary():
 # ══════════════════════════════════════════════════════════════════════════════
 #  DASHBOARDS
 # ══════════════════════════════════════════════════════════════════════════════
-
 ADMIN_SECTIONS = [
     ("Overview",      ["🏠 Home"]),
     ("Doctors",       ["➕ Add Doctor","👁️ View Doctors","🔍 Search Doctor","🗑️ Delete Doctor"]),
