@@ -38,7 +38,9 @@ html,body,[class*="css"]{ font-family:'DM Sans',sans-serif; }
 #MainMenu,footer {
 #  visibility:hidden;
 #  }
-.block-container{ padding-top:1rem !important; }
+.block-container{ 
+    padding-top:2rem !important; 
+}
 
 /* ── Sidebar ── */
 section[data-testid="stSidebar"]{
@@ -99,7 +101,9 @@ section[data-testid="stSidebar"] .stButton>button[kind="primary"]{
 /* ── Top Nav ── */
 .topnav{
   background:linear-gradient(90deg,#0f172a,#134e4a);
-  border-radius:14px; padding:14px 28px;
+  border-radius:14px; 
+  padding:18px 28px;
+  margin-top:15px;
   display:flex; align-items:center; justify-content:space-between;
   margin-bottom:1.5rem; color:white;
   border:1px solid rgba(20,184,166,0.3);
